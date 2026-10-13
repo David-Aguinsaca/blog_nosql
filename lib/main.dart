@@ -14,7 +14,9 @@ void main() async {
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    debugPrint('ℹ️ Archivo .env no encontrado o no cargado en assets, usando valores por defecto: $e');
+    debugPrint(
+      'Archivo .env no encontrado o no cargado en assets, usando valores por defecto: $e',
+    );
   }
   await MongoService().connect();
   runApp(const EcoBlogApp());

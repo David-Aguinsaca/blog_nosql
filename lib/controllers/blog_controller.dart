@@ -37,11 +37,31 @@ class BlogController extends ChangeNotifier {
   void setSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
+    if (_mongoService.isConnected) {
+      searchPostsInMongo(query);
+    }
   }
 
   void clearSearchQuery() {
     _searchQuery = '';
     notifyListeners();
+    if (_mongoService.isConnected) {
+      syncFromMongo();
+    }
+  }
+
+  /// Consulta y filtra publicaciones directamente en MongoDB por título
+  Future<void> searchPostsInMongo(String query) async {
+    if (!_mongoService.isConnected) return;
+    try {
+      final results = await _mongoService.searchPostsByTitle(query);
+      _posts
+        ..clear()
+        ..addAll(results);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error en searchPostsInMongo: $e');
+    }
   }
 
   /// Inicializa la conexión con MongoDB y sincroniza los datos

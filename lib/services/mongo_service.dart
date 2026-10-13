@@ -53,7 +53,7 @@ class MongoService {
         '127.0.0.1',
         '10.4.15.14',
         '10.0.2.2',
-        '10.0.3.2'
+        '10.0.3.2',
       }.toList();
       for (final candidate in candidates) {
         try {
@@ -81,7 +81,7 @@ class MongoService {
           'Para conectar en vivo a MongoDB ejecuta en Linux Desktop (flutter run -d linux) o Android. '
           'La app en web continuará en modo local/memoria.';
       debugPrint(
-        'ℹ️ [Web] Modo memoria/local activo: Los navegadores web no admiten sockets TCP directos a MongoDB.',
+        '[Web] Modo memoria/local activo: Los navegadores web no admiten sockets TCP directos a MongoDB.',
       );
       return false;
     }
@@ -183,6 +183,31 @@ class MongoService {
           .toList();
     } catch (e) {
       debugPrint('Error en fetchPosts: $e');
+      return [];
+    }
+  }
+
+  /// Consulta directa a MongoDB para filtrar publicaciones por título
+  /// Sentencia nativa: db.posts.find({ title: { $regex: titleQuery, $options: "i" } }).sort({ createdAt: -1 })
+  Future<List<BlogPostModel>> searchPostsByTitle(String titleQuery) async {
+    if (!isConnected || _postsCollection == null) return [];
+    try {
+      final query = titleQuery.trim();
+      final Map<String, dynamic> filter = query.isEmpty
+          ? {}
+          : {
+              'title': {r'$regex': query, r'$options': 'i'},
+            };
+
+      final docs = await _postsCollection!
+          .modernFind(filter: filter, sort: {'createdAt': -1})
+          .toList();
+
+      return docs
+          .map((d) => BlogPostModel.fromMap(Map<String, dynamic>.from(d)))
+          .toList();
+    } catch (e) {
+      debugPrint('Error en searchPostsByTitle: $e');
       return [];
     }
   }
