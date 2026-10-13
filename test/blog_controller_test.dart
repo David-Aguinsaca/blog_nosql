@@ -9,12 +9,25 @@ void main() {
       blogController = BlogController();
     });
 
-    test('Initial seed posts are loaded', () {
-      expect(blogController.allPosts.isNotEmpty, true);
-      expect(blogController.filteredPosts.length, blogController.allPosts.length);
+    test('Initial posts are empty without mockup', () {
+      expect(blogController.allPosts.isEmpty, true);
+      expect(blogController.filteredPosts.isEmpty, true);
     });
 
-    test('Filter by title works reactively', () {
+    test('Filter by title works reactively', () async {
+      await blogController.addPost(
+        creatorUsername: 'usuario1',
+        topic: 'Energía',
+        title: 'Paneles Solares en Comunidades',
+        content: 'Contenido sobre energía solar.',
+      );
+      await blogController.addPost(
+        creatorUsername: 'usuario2',
+        topic: 'Agua',
+        title: 'Cuidado de Cuencas Hídricas',
+        content: 'Contenido sobre agua.',
+      );
+
       blogController.setSearchQuery('Solar');
       expect(
         blogController.filteredPosts.every(
@@ -25,16 +38,26 @@ void main() {
       expect(blogController.filteredPosts.length, 1);
 
       blogController.clearSearchQuery();
-      expect(blogController.filteredPosts.length, blogController.allPosts.length);
+      expect(blogController.filteredPosts.length, 2);
     });
 
-    test('getUserPosts returns only posts by specified user', () {
-      final davidPosts = blogController.getUserPosts('david');
-      expect(davidPosts.isNotEmpty, true);
-      expect(
-        davidPosts.every((p) => p.creatorUsername.toLowerCase() == 'david'),
-        true,
+    test('getUserPosts returns only posts by specified user', () async {
+      await blogController.addPost(
+        creatorUsername: 'autor_a',
+        topic: 'Tema A',
+        title: 'Post de autor A',
+        content: 'Contenido A',
       );
+      await blogController.addPost(
+        creatorUsername: 'autor_b',
+        topic: 'Tema B',
+        title: 'Post de autor B',
+        content: 'Contenido B',
+      );
+
+      final postsA = blogController.getUserPosts('autor_a');
+      expect(postsA.length, 1);
+      expect(postsA.first.creatorUsername, 'autor_a');
     });
 
     test('Add post inserts new publication at the beginning', () async {
@@ -54,16 +77,22 @@ void main() {
     });
 
     test('Update post modifies post content', () async {
-      final post = blogController.allPosts.first;
+      final newPost = await blogController.addPost(
+        creatorUsername: 'david',
+        topic: 'Tema Inicial',
+        title: 'Título Inicial',
+        content: 'Contenido Inicial',
+      );
+
       final success = await blogController.updatePost(
-        postId: post.id,
+        postId: newPost.id,
         topic: 'Tema Actualizado',
         title: 'Título Modificado',
         content: 'Contenido editado con éxito.',
       );
 
       expect(success, true);
-      final updated = blogController.getPostById(post.id);
+      final updated = blogController.getPostById(newPost.id);
       expect(updated?.title, 'Título Modificado');
       expect(updated?.topic, 'Tema Actualizado');
       expect(updated?.content, 'Contenido editado con éxito.');
@@ -71,32 +100,41 @@ void main() {
     });
 
     test('Delete post removes publication from list', () async {
-      final post = blogController.allPosts.first;
+      final newPost = await blogController.addPost(
+        creatorUsername: 'david',
+        topic: 'Para Eliminar',
+        title: 'Post temporal',
+        content: 'Contenido a borrar',
+      );
       final initialCount = blogController.allPosts.length;
 
-      final success = await blogController.deletePost(post.id);
+      final success = await blogController.deletePost(newPost.id);
       expect(success, true);
       expect(blogController.allPosts.length, initialCount - 1);
-      expect(blogController.getPostById(post.id), isNull);
+      expect(blogController.getPostById(newPost.id), isNull);
     });
 
     test('Add, update and delete comments on a post', () async {
-      final post = blogController.allPosts.first;
-      final initialCommentsCount = post.comments.length;
+      final post = await blogController.addPost(
+        creatorUsername: 'david',
+        topic: 'Conservación',
+        title: 'Artículo con comentarios',
+        content: 'Contenido base',
+      );
 
       // 1. Add comment
       final addSuccess = await blogController.addComment(
         postId: post.id,
-        userName: 'david',
+        userName: 'elena',
         commentText: 'Excelente artículo para la conservación.',
       );
       expect(addSuccess, true);
 
       final updatedPost = blogController.getPostById(post.id)!;
-      expect(updatedPost.comments.length, initialCommentsCount + 1);
+      expect(updatedPost.comments.length, 1);
       final addedComment = updatedPost.comments.last;
       expect(addedComment.comment, 'Excelente artículo para la conservación.');
-      expect(addedComment.userName, 'david');
+      expect(addedComment.userName, 'elena');
 
       // 2. Update comment
       final editSuccess = await blogController.updateComment(
@@ -121,7 +159,7 @@ void main() {
       expect(deleteSuccess, true);
 
       final postAfterDelete = blogController.getPostById(post.id)!;
-      expect(postAfterDelete.comments.length, initialCommentsCount);
+      expect(postAfterDelete.comments.isEmpty, true);
     });
   });
 }

@@ -46,13 +46,6 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  void _fillDemoUser(String user, String pass) {
-    setState(() {
-      _usernameController.text = user;
-      _passwordController.text = pass;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,7 +117,7 @@ class _LoginViewState extends State<LoginView> {
                     controller: _usernameController,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
-                      hintText: 'Ingresa tu usuario (ej. david)',
+                      hintText: 'Ingresa tu usuario',
                       prefixIcon: Icon(
                         Icons.person_outline_rounded,
                         color: AppColors.sageGreen,
@@ -197,69 +190,6 @@ class _LoginViewState extends State<LoginView> {
                             ),
                           )
                         : const Text('Iniciar Sesión'),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Acceso rápido de prueba para prototipo
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.paleLime.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.softOlive,
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Credenciales Demo para prueba rápida:',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryTeal,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                minimumSize: Size.zero,
-                              ),
-                              onPressed: () => _fillDemoUser('david', '123456'),
-                              child: const Text(
-                                'Usuario: david',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                minimumSize: Size.zero,
-                              ),
-                              onPressed: () =>
-                                  _fillDemoUser('elena_bio', '123456'),
-                              child: const Text(
-                                'Usuario: elena_bio',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
                   ),
 
                   const SizedBox(height: 24),

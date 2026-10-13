@@ -6,8 +6,11 @@ import 'theme/app_theme.dart';
 import 'views/auth/login_view.dart';
 import 'views/home/home_view.dart';
 
-void main() {
+import 'services/mongo_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MongoService().connect();
   runApp(const EcoBlogApp());
 }
 

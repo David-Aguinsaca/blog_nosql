@@ -191,16 +191,13 @@ blog_nosql/
 
 ---
 
-## 🔑 Credenciales de Prueba
+## 👤 Registro y Acceso de Usuarios
 
-Usuarios precargados en la base de datos por `mongo-init.js`:
+El proyecto inicia limpio, sin usuarios ni publicaciones mockup precargadas:
 
-| Usuario | Contraseña | Correo Electrónico |
-| :--- | :--- | :--- |
-| `david` | `123456` | `david@planetaverde.org` |
-| `elena_bio` | `123456` | `elena@ecovida.org` |
-| `marina_eco` | `123456` | `marina@bosques.org` |
-| `santiago_clima` | `123456` | `santiago@clima.org` |
+- Puedes registrar nuevos usuarios directamente desde la pantalla de **Registro** de la aplicación móvil (aceptando los Términos y Condiciones).
+- Los usuarios registrados y sus publicaciones se persistirán inmediatamente en las colecciones `users` y `posts` de MongoDB.
+- Si deseas insertar datos manualmente para pruebas o administración, puedes hacerlo desde **MongoDB Compass** o mediante la consola interactiva `mongosh`.
 
 ---
 
@@ -226,10 +223,13 @@ Usuarios precargados en la base de datos por `mongo-init.js`:
      ```bash
      flutter run -d linux
      ```
-   - En **Emulador Android** *(el servicio conecta automáticamente a `10.0.2.2:27017`)*:
+   - En **Emulador / Dispositivo Android**:
+     Para conectar directamente el emulador o dispositivo a la máquina local, ejecuta:
      ```bash
+     adb reverse tcp:27017 tcp:27017
      flutter run
      ```
+     > **💡 Nota de red:** La aplicación detecta automáticamente la IP alcanzable (`127.0.0.1`, `10.4.15.14`, `10.0.2.2` o `10.0.3.2`). Si cambias de red o usas otra IP, puedes presionar o mantener pulsado el chip **MongoDB: Conectado / Offline** en la pantalla principal para cambiar el Host en el diálogo interactivo.
 
 ---
 

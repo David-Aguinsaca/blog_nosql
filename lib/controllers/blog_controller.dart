@@ -10,7 +10,6 @@ class BlogController extends ChangeNotifier {
   bool _isLoading = false;
 
   BlogController() {
-    _initSeedData();
     initializeMongo();
   }
 
@@ -227,81 +226,5 @@ class BlogController extends ChangeNotifier {
     final index = _posts.indexWhere((p) => p.id == id);
     if (index != -1) return _posts[index];
     return null;
-  }
-
-  void _initSeedData() {
-    _posts.addAll([
-      BlogPostModel(
-        id: 'seed_post_1',
-        creatorUsername: 'elena_bio',
-        createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-        topic: 'Energía Renovable',
-        title: 'Microredes solares comunitarias: transformando el consumo energético',
-        content:
-            'La transición hacia energías limpias no depende únicamente de grandes parques solares, sino de la descentralización. En comunidades rurales y suburbanas, las microredes solares permiten almacenar y distribuir energía limpia sin intermediarios, reduciendo la huella de carbono un 40% en promedio.',
-        comments: [
-          CommentModel(
-            id: 'seed_comm_1',
-            postId: 'seed_post_1',
-            userName: 'carlos_verde',
-            date: DateTime.now().subtract(const Duration(hours: 2)),
-            comment: 'Excelente iniciativa. En mi barrio estamos evaluando paneles compartidos.',
-          ),
-          CommentModel(
-            id: 'seed_comm_2',
-            postId: 'seed_post_1',
-            userName: 'david',
-            date: DateTime.now().subtract(const Duration(minutes: 45)),
-            comment: 'El almacenamiento con baterías ecológicas es el siguiente gran paso.',
-          ),
-        ],
-      ),
-      BlogPostModel(
-        id: 'seed_post_2',
-        creatorUsername: 'david',
-        createdAt: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
-        topic: 'Cero Residuos',
-        title: 'Hábitos diarios para reducir el plástico de un solo uso en casa',
-        content:
-            'Adoptar el estilo de vida zero waste no requiere perfección, sino constancia. Reemplazar bolsas plásticas por tela, comprar granos a granel y reutilizar frascos de vidrio son pasos sencillos que evitan kilogramos de residuos plásticos que terminan en ríos y océanos.',
-        comments: [
-          CommentModel(
-            id: 'seed_comm_3',
-            postId: 'seed_post_2',
-            userName: 'elena_bio',
-            date: DateTime.now().subtract(const Duration(hours: 18)),
-            comment: 'Completamente de acuerdo, los pequeños hábitos suman un impacto masivo.',
-          ),
-        ],
-      ),
-      BlogPostModel(
-        id: 'seed_post_3',
-        creatorUsername: 'marina_eco',
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        topic: 'Reforestación Urbana',
-        title: 'Bosques de bolsillo: biodiversidad en medio del concreto',
-        content:
-            'El método Miyawaki demuestra que es posible sembrar bosques densos de vegetación nativa en espacios urbanos reducidos. Estos oasis no solo disminuyen la temperatura en las ciudades, sino que atraen aves polinizadoras y mejoran la calidad del aire respirable.',
-        comments: [
-          CommentModel(
-            id: 'seed_comm_4',
-            postId: 'seed_post_3',
-            userName: 'david',
-            date: DateTime.now().subtract(const Duration(days: 1)),
-            comment: 'Hemos plantado 20 árboles nativos en el parque central con este método.',
-          ),
-        ],
-      ),
-      BlogPostModel(
-        id: 'seed_post_4',
-        creatorUsername: 'santiago_clima',
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        topic: 'Biodiversidad',
-        title: 'Importancia vital de los corredores biológicos para polinizadores',
-        content:
-            'Las abejas y mariposas enfrentan fragmentación en sus hábitats debido a la expansión urbana y pesticidas. Crear jardines con flores silvestres nativas en balcones y aceras conecta sus rutas y protege la seguridad alimentaria global.',
-        comments: [],
-      ),
-    ]);
   }
 }

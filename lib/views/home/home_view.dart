@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
@@ -59,6 +60,104 @@ class _HomeViewState extends State<HomeView> {
               context.read<AuthController>().logout();
             },
             child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMongoConfigDialog(BuildContext context, BlogController blogCtrl) {
+    final hostController = TextEditingController(
+      text: blogCtrl.mongoService.currentHost,
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Conexión MongoDB',
+          style: TextStyle(
+            color: AppColors.primaryTeal,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Host / Dirección IP del servidor MongoDB:',
+              style: TextStyle(fontSize: 13, color: AppColors.textDark),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: hostController,
+              decoration: const InputDecoration(
+                hintText: 'ej. 127.0.0.1 o 10.4.15.14',
+                prefixIcon: Icon(Icons.dns_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Accesos rápidos:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                ActionChip(
+                  label: const Text('127.0.0.1 (adb reverse)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => hostController.text = '127.0.0.1',
+                ),
+                ActionChip(
+                  label: const Text('10.4.15.14 (LAN)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => hostController.text = '10.4.15.14',
+                ),
+                ActionChip(
+                  label: const Text('10.0.2.2 (AVD)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => hostController.text = '10.0.2.2',
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primaryTeal,
+            ),
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final host = hostController.text.trim();
+              final success = await blogCtrl.initializeMongo(
+                host: host.isEmpty ? null : host,
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Conectado a MongoDB en ${blogCtrl.mongoService.currentHost}:27017'
+                          : 'No se pudo conectar a MongoDB: ${blogCtrl.mongoService.lastError ?? "Revisa la IP y el contenedor"}',
+                    ),
+                    backgroundColor: success ? AppColors.sageGreen : AppColors.danger,
+                  ),
+                );
+              }
+            },
+            child: const Text('Conectar'),
           ),
         ],
       ),
@@ -157,7 +256,24 @@ class _HomeViewState extends State<HomeView> {
                       ),
                       InkWell(
                         borderRadius: BorderRadius.circular(8),
+                        onLongPress: kIsWeb ? null : () => _showMongoConfigDialog(context, blogCtrl),
                         onTap: () async {
+                          if (kIsWeb) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'En navegadores web no se admiten sockets TCP directos a MongoDB. Para probar la base de datos en vivo ejecuta en Linux Desktop: flutter run -d linux',
+                                ),
+                                backgroundColor: AppColors.primaryTeal,
+                                duration: Duration(seconds: 4),
+                              ),
+                            );
+                            return;
+                          }
+                          if (!blogCtrl.mongoService.isConnected) {
+                            _showMongoConfigDialog(context, blogCtrl);
+                            return;
+                          }
                           final success = await blogCtrl.initializeMongo();
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -204,7 +320,9 @@ class _HomeViewState extends State<HomeView> {
                               Text(
                                 blogCtrl.mongoService.isConnected
                                     ? 'MongoDB: Conectado'
-                                    : 'MongoDB: Offline (Reintentar)',
+                                    : (kIsWeb
+                                        ? 'Web: Modo Local'
+                                        : 'MongoDB: Offline (Reintentar)'),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,

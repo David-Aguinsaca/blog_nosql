@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Socket;
 import 'package:flutter/foundation.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 import '../models/blog_post_model.dart';
@@ -27,18 +27,51 @@ class MongoService {
   String? get lastError => _lastError;
   String get currentHost => _currentHost;
 
-  String _determineDefaultHost() {
+  Future<String> _resolveBestHost(String? requestedHost) async {
+    if (requestedHost != null && requestedHost.trim().isNotEmpty) {
+      return requestedHost.trim();
+    }
     if (kIsWeb) return '127.0.0.1';
-    try {
-      if (Platform.isAndroid) {
-        return '10.0.2.2';
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      // Candidatos en Android:
+      // 1. 127.0.0.1 (adb reverse tcp:27017 tcp:27017)
+      // 2. 10.4.15.14 (IP LAN del host)
+      // 3. 10.0.2.2 (emulador estándar Android Studio)
+      // 4. 10.0.3.2 (Genymotion)
+      final candidates = ['127.0.0.1', '10.4.15.14', '10.0.2.2', '10.0.3.2'];
+      for (final candidate in candidates) {
+        try {
+          final socket = await Socket.connect(
+            candidate,
+            _defaultPort,
+            timeout: const Duration(milliseconds: 500),
+          );
+          await socket.close();
+          debugPrint('🎯 Host alcanzable para MongoDB en Android: $candidate');
+          return candidate;
+        } catch (_) {}
       }
-    } catch (_) {}
+      return '127.0.0.1';
+    }
+
     return '127.0.0.1';
   }
 
   Future<bool> connect({String? host}) async {
-    _currentHost = host ?? _determineDefaultHost();
+    if (kIsWeb) {
+      _isConnected = false;
+      _lastError =
+          'En navegadores web no se permiten conexiones directas por socket TCP a MongoDB. '
+          'Para conectar en vivo a MongoDB ejecuta en Linux Desktop (flutter run -d linux) o Android. '
+          'La app en web continuará en modo local/memoria.';
+      debugPrint(
+        'ℹ️ [Web] Modo memoria/local activo: Los navegadores web no admiten sockets TCP directos a MongoDB.',
+      );
+      return false;
+    }
+
+    _currentHost = await _resolveBestHost(host);
     final uri =
         'mongodb://$_defaultUser:$_defaultPassword@$_currentHost:$_defaultPort/$_defaultDbName?authSource=$_defaultDbName';
 

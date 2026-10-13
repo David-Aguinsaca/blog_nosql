@@ -5,20 +5,7 @@ import '../services/mongo_service.dart';
 class AuthController extends ChangeNotifier {
   final MongoService _mongoService = MongoService();
   UserModel? _currentUser;
-  final List<UserModel> _users = [
-    UserModel(
-      id: 'user_1',
-      username: 'david',
-      email: 'david@planetaverde.org',
-      password: '123456',
-    ),
-    UserModel(
-      id: 'user_2',
-      username: 'elena_bio',
-      email: 'elena@ecovida.org',
-      password: '123456',
-    ),
-  ];
+  final List<UserModel> _users = [];
 
   String? _errorMessage;
 
@@ -30,6 +17,10 @@ class AuthController extends ChangeNotifier {
     _errorMessage = null;
     final trimmedUser = username.trim();
     final trimmedPass = password.trim();
+
+    if (!_mongoService.isConnected) {
+      await _mongoService.connect();
+    }
 
     if (trimmedUser.isEmpty || trimmedPass.isEmpty) {
       _errorMessage = 'Por favor ingresa usuario y contraseña.';
@@ -83,6 +74,10 @@ class AuthController extends ChangeNotifier {
     final trimmedEmail = email.trim();
     final trimmedUser = username.trim();
     final trimmedPass = password.trim();
+
+    if (!_mongoService.isConnected) {
+      await _mongoService.connect();
+    }
 
     if (trimmedEmail.isEmpty || trimmedUser.isEmpty || trimmedPass.isEmpty) {
       _errorMessage = 'Todos los campos son obligatorios.';
