@@ -18,6 +18,24 @@ El proyecto incluye configuración de Docker Compose para levantar MongoDB 7.0 c
 | **Puerto Host** | `27017` | `27017` |
 | **Base de Autenticación** | `ecoblog_db` | `admin` |
 
+### 🔐 Variables de Entorno (`.env` y `.env.example`)
+
+La aplicación carga la configuración y credenciales de MongoDB desde un archivo `.env` mediante `flutter_dotenv`:
+
+```properties
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+MONGO_DB_NAME=ecoblog_db
+MONGO_USER=ecouser
+MONGO_PASSWORD=ecopassword123
+```
+
+Para configurar un nuevo entorno:
+```bash
+cp .env.example .env
+```
+*(Nota: El archivo `.env` se encuentra ignorado en `.gitignore` para proteger las credenciales, mientras que `.env.example` permanece versionado como plantilla).*
+
 ### 🧭 Conexión desde MongoDB Compass
 
 Abre **MongoDB Compass** y utiliza cualquiera de las siguientes URI de conexión:

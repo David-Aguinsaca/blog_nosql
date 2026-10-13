@@ -1,5 +1,6 @@
 import 'dart:io' show Socket;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 import '../models/blog_post_model.dart';
 import '../models/comment_model.dart';
@@ -10,10 +11,18 @@ class MongoService {
   factory MongoService() => _instance;
   MongoService._internal();
 
-  static const String _defaultDbName = 'ecoblog_db';
-  static const String _defaultUser = 'ecouser';
-  static const String _defaultPassword = 'ecopassword123';
-  static const int _defaultPort = 27017;
+  String _getEnv(String key, String defaultValue) {
+    if (dotenv.isInitialized) {
+      return dotenv.env[key] ?? defaultValue;
+    }
+    return defaultValue;
+  }
+
+  String get _dbName => _getEnv('MONGO_DB_NAME', 'ecoblog_db');
+  String get _user => _getEnv('MONGO_USER', 'ecouser');
+  String get _password => _getEnv('MONGO_PASSWORD', 'ecopassword123');
+  int get _port => int.tryParse(_getEnv('MONGO_PORT', '27017')) ?? 27017;
+  String get _configuredHost => _getEnv('MONGO_HOST', '127.0.0.1');
 
   Db? _db;
   DbCollection? _usersCollection;
@@ -39,12 +48,18 @@ class MongoService {
       // 2. 10.4.15.14 (IP LAN del host)
       // 3. 10.0.2.2 (emulador estándar Android Studio)
       // 4. 10.0.3.2 (Genymotion)
-      final candidates = ['127.0.0.1', '10.4.15.14', '10.0.2.2', '10.0.3.2'];
+      final candidates = {
+        _configuredHost,
+        '127.0.0.1',
+        '10.4.15.14',
+        '10.0.2.2',
+        '10.0.3.2'
+      }.toList();
       for (final candidate in candidates) {
         try {
           final socket = await Socket.connect(
             candidate,
-            _defaultPort,
+            _port,
             timeout: const Duration(milliseconds: 500),
           );
           await socket.close();
@@ -52,10 +67,10 @@ class MongoService {
           return candidate;
         } catch (_) {}
       }
-      return '127.0.0.1';
+      return _configuredHost;
     }
 
-    return '127.0.0.1';
+    return _configuredHost;
   }
 
   Future<bool> connect({String? host}) async {
@@ -73,7 +88,7 @@ class MongoService {
 
     _currentHost = await _resolveBestHost(host);
     final uri =
-        'mongodb://$_defaultUser:$_defaultPassword@$_currentHost:$_defaultPort/$_defaultDbName?authSource=$_defaultDbName';
+        'mongodb://$_user:$_password@$_currentHost:$_port/$_dbName?authSource=$_dbName';
 
     try {
       if (_db != null && _db!.isConnected) {
