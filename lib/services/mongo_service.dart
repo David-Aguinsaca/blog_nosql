@@ -48,7 +48,7 @@ class MongoService {
             timeout: const Duration(milliseconds: 500),
           );
           await socket.close();
-          debugPrint('🎯 Host alcanzable para MongoDB en Android: $candidate');
+          debugPrint('Host alcanzable para MongoDB en Android: $candidate');
           return candidate;
         } catch (_) {}
       }
@@ -115,9 +115,10 @@ class MongoService {
   Future<UserModel?> findUserByUsername(String username) async {
     if (!isConnected || _usersCollection == null) return null;
     try {
-      final doc = await _usersCollection!.findOne(
-        where.eq('username', username.trim()),
-      );
+      // Sentencia directa MongoDB: db.users.findOne({ username: "..." })
+      final doc = await _usersCollection!.findOne({
+        'username': username.trim(),
+      });
       if (doc != null) {
         return UserModel.fromMap(Map<String, dynamic>.from(doc));
       }
@@ -130,6 +131,7 @@ class MongoService {
   Future<bool> createUser(UserModel user) async {
     if (!isConnected || _usersCollection == null) return false;
     try {
+      // Sentencia directa MongoDB: db.users.insertOne({ ... })
       final res = await _usersCollection!.insertOne(user.toMap());
       return res.isSuccess;
     } catch (e) {
@@ -141,6 +143,7 @@ class MongoService {
   Future<List<UserModel>> getAllUsers() async {
     if (!isConnected || _usersCollection == null) return [];
     try {
+      // Sentencia directa MongoDB: db.users.find({})
       final docs = await _usersCollection!.find().toList();
       return docs
           .map((d) => UserModel.fromMap(Map<String, dynamic>.from(d)))
@@ -156,8 +159,9 @@ class MongoService {
   Future<List<BlogPostModel>> fetchPosts() async {
     if (!isConnected || _postsCollection == null) return [];
     try {
+      // Sentencia directa MongoDB: db.posts.find({}).sort({ createdAt: -1 })
       final docs = await _postsCollection!
-          .find(where.sortBy('createdAt', descending: true))
+          .modernFind(filter: {}, sort: {'createdAt': -1})
           .toList();
       return docs
           .map((d) => BlogPostModel.fromMap(Map<String, dynamic>.from(d)))
@@ -171,6 +175,7 @@ class MongoService {
   Future<bool> insertPost(BlogPostModel post) async {
     if (!isConnected || _postsCollection == null) return false;
     try {
+      // Sentencia directa MongoDB: db.posts.insertOne({ ... })
       final res = await _postsCollection!.insertOne(post.toMap());
       return res.isSuccess;
     } catch (e) {
@@ -187,13 +192,17 @@ class MongoService {
   }) async {
     if (!isConnected || _postsCollection == null) return false;
     try {
+      // Sentencia directa MongoDB: db.posts.updateOne({ _id: postId }, { $set: { ... } })
       final res = await _postsCollection!.updateOne(
-        where.eq('_id', postId),
-        modify
-            .set('title', title)
-            .set('topic', topic)
-            .set('content', content)
-            .set('isEdited', true),
+        {'_id': postId},
+        {
+          r'$set': {
+            'title': title,
+            'topic': topic,
+            'content': content,
+            'isEdited': true,
+          },
+        },
       );
       return res.isSuccess;
     } catch (e) {
@@ -205,7 +214,8 @@ class MongoService {
   Future<bool> deletePost(String postId) async {
     if (!isConnected || _postsCollection == null) return false;
     try {
-      final res = await _postsCollection!.deleteOne(where.eq('_id', postId));
+      // Sentencia directa MongoDB: db.posts.deleteOne({ _id: postId })
+      final res = await _postsCollection!.deleteOne({'_id': postId});
       return res.isSuccess;
     } catch (e) {
       debugPrint('Error en deletePost: $e');
@@ -218,9 +228,12 @@ class MongoService {
   Future<bool> addComment(String postId, CommentModel comment) async {
     if (!isConnected || _postsCollection == null) return false;
     try {
+      // Sentencia directa MongoDB: db.posts.updateOne({ _id: postId }, { $push: { comments: comment } })
       final res = await _postsCollection!.updateOne(
-        where.eq('_id', postId),
-        modify.push('comments', comment.toMap()),
+        {'_id': postId},
+        {
+          r'$push': {'comments': comment.toMap()},
+        },
       );
       return res.isSuccess;
     } catch (e) {
@@ -232,9 +245,12 @@ class MongoService {
   Future<bool> updateComment(String postId, CommentModel comment) async {
     if (!isConnected || _postsCollection == null) return false;
     try {
+      // Sentencia directa MongoDB: db.posts.updateOne({ _id: postId, "comments.id": comment.id }, { $set: { "comments.$": comment } })
       final res = await _postsCollection!.updateOne(
-        where.eq('_id', postId).and(where.eq('comments.id', comment.id)),
-        modify.set(r'comments.$', comment.toMap()),
+        {'_id': postId, 'comments.id': comment.id},
+        {
+          r'$set': {r'comments.$': comment.toMap()},
+        },
       );
       return res.isSuccess;
     } catch (e) {
@@ -246,9 +262,14 @@ class MongoService {
   Future<bool> deleteComment(String postId, String commentId) async {
     if (!isConnected || _postsCollection == null) return false;
     try {
+      // Sentencia directa MongoDB: db.posts.updateOne({ _id: postId }, { $pull: { comments: { id: commentId } } })
       final res = await _postsCollection!.updateOne(
-        where.eq('_id', postId),
-        modify.pull('comments', {'id': commentId}),
+        {'_id': postId},
+        {
+          r'$pull': {
+            'comments': {'id': commentId},
+          },
+        },
       );
       return res.isSuccess;
     } catch (e) {
