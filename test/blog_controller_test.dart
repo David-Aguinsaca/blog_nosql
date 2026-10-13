@@ -37,9 +37,9 @@ void main() {
       );
     });
 
-    test('Add post inserts new publication at the beginning', () {
+    test('Add post inserts new publication at the beginning', () async {
       final initialCount = blogController.allPosts.length;
-      blogController.addPost(
+      await blogController.addPost(
         creatorUsername: 'david',
         topic: 'Agroecología',
         title: 'Cultivos sin pesticidas en huertos urbanos',
@@ -53,9 +53,9 @@ void main() {
       expect(latest.topic, 'Agroecología');
     });
 
-    test('Update post modifies post content', () {
+    test('Update post modifies post content', () async {
       final post = blogController.allPosts.first;
-      final success = blogController.updatePost(
+      final success = await blogController.updatePost(
         postId: post.id,
         topic: 'Tema Actualizado',
         title: 'Título Modificado',
@@ -70,22 +70,22 @@ void main() {
       expect(updated?.isEdited, true);
     });
 
-    test('Delete post removes publication from list', () {
+    test('Delete post removes publication from list', () async {
       final post = blogController.allPosts.first;
       final initialCount = blogController.allPosts.length;
 
-      final success = blogController.deletePost(post.id);
+      final success = await blogController.deletePost(post.id);
       expect(success, true);
       expect(blogController.allPosts.length, initialCount - 1);
       expect(blogController.getPostById(post.id), isNull);
     });
 
-    test('Add, update and delete comments on a post', () {
+    test('Add, update and delete comments on a post', () async {
       final post = blogController.allPosts.first;
       final initialCommentsCount = post.comments.length;
 
       // 1. Add comment
-      final addSuccess = blogController.addComment(
+      final addSuccess = await blogController.addComment(
         postId: post.id,
         userName: 'david',
         commentText: 'Excelente artículo para la conservación.',
@@ -99,7 +99,7 @@ void main() {
       expect(addedComment.userName, 'david');
 
       // 2. Update comment
-      final editSuccess = blogController.updateComment(
+      final editSuccess = await blogController.updateComment(
         postId: post.id,
         commentId: addedComment.id,
         newCommentText: 'Comentario editado con más detalles.',
@@ -114,7 +114,7 @@ void main() {
       expect(editedComment.isEdited, true);
 
       // 3. Delete comment
-      final deleteSuccess = blogController.deleteComment(
+      final deleteSuccess = await blogController.deleteComment(
         postId: post.id,
         commentId: addedComment.id,
       );

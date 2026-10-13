@@ -24,4 +24,22 @@ class UserModel {
       password: password ?? this.password,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      '_id': id,
+      'username': username,
+      'email': email,
+      'password': password,
+    };
+  }
+
+  factory UserModel.fromMap(Map<String, dynamic> map) {
+    return UserModel(
+      id: map['_id']?.toString() ?? map['id']?.toString() ?? '',
+      username: map['username']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      password: map['password']?.toString() ?? '',
+    );
+  }
 }

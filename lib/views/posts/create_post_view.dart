@@ -26,7 +26,7 @@ class _CreatePostViewState extends State<CreatePostView> {
     super.dispose();
   }
 
-  void _submitPost() {
+  Future<void> _submitPost() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authCtrl = context.read<AuthController>();
@@ -43,13 +43,14 @@ class _CreatePostViewState extends State<CreatePostView> {
     }
 
     setState(() => _isSubmitting = true);
-    context.read<BlogController>().addPost(
+    await context.read<BlogController>().addPost(
       creatorUsername: currentUser.username,
       topic: _topicController.text.trim(),
       title: _titleController.text.trim(),
       content: _contentController.text.trim(),
     );
 
+    if (!mounted) return;
     setState(() => _isSubmitting = false);
     Navigator.of(context).pop();
 

@@ -42,4 +42,48 @@ class BlogPostModel {
       isEdited: isEdited ?? this.isEdited,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      '_id': id,
+      'creatorUsername': creatorUsername,
+      'createdAt': createdAt.toIso8601String(),
+      'topic': topic,
+      'title': title,
+      'content': content,
+      'isEdited': isEdited,
+      'comments': comments.map((c) => c.toMap()).toList(),
+    };
+  }
+
+  factory BlogPostModel.fromMap(Map<String, dynamic> map) {
+    DateTime parsedDate;
+    final rawDate = map['createdAt'];
+    if (rawDate is DateTime) {
+      parsedDate = rawDate;
+    } else if (rawDate is String) {
+      parsedDate = DateTime.tryParse(rawDate) ?? DateTime.now();
+    } else {
+      parsedDate = DateTime.now();
+    }
+
+    final rawComments = map['comments'] as List<dynamic>? ?? [];
+    final commentsList = rawComments.map((item) {
+      if (item is Map) {
+        return CommentModel.fromMap(Map<String, dynamic>.from(item));
+      }
+      return null;
+    }).whereType<CommentModel>().toList();
+
+    return BlogPostModel(
+      id: map['_id']?.toString() ?? map['id']?.toString() ?? '',
+      creatorUsername: map['creatorUsername']?.toString() ?? '',
+      createdAt: parsedDate,
+      topic: map['topic']?.toString() ?? '',
+      title: map['title']?.toString() ?? '',
+      content: map['content']?.toString() ?? '',
+      isEdited: map['isEdited'] == true,
+      comments: commentsList,
+    );
+  }
 }

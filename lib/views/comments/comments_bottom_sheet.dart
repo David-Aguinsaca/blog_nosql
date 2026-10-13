@@ -64,7 +64,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     }
 
     setState(() => _isSubmitting = true);
-    blogCtrl.addComment(
+    await blogCtrl.addComment(
       postId: widget.postId,
       userName: currentUser.username,
       commentText: text,
@@ -72,7 +72,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
     _newCommentController.clear();
     _focusNode.unfocus();
-    setState(() => _isSubmitting = false);
+    if (mounted) setState(() => _isSubmitting = false);
   }
 
   Future<void> _handleEditComment(CommentModel comment) async {
@@ -120,18 +120,20 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     if (confirmed == true && mounted) {
       final updatedText = editController.text.trim();
       if (updatedText.isNotEmpty) {
-        context.read<BlogController>().updateComment(
+        await context.read<BlogController>().updateComment(
           postId: widget.postId,
           commentId: comment.id,
           newCommentText: updatedText,
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Comentario actualizado correctamente'),
-            backgroundColor: AppColors.sageGreen,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Comentario actualizado correctamente'),
+              backgroundColor: AppColors.sageGreen,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       }
     }
     editController.dispose();
@@ -147,17 +149,19 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     );
 
     if (shouldDelete && mounted) {
-      context.read<BlogController>().deleteComment(
+      await context.read<BlogController>().deleteComment(
         postId: widget.postId,
         commentId: comment.id,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Comentario eliminado'),
-          backgroundColor: AppColors.danger,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comentario eliminado'),
+            backgroundColor: AppColors.danger,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 

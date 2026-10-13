@@ -36,17 +36,17 @@ class _EditPostViewState extends State<EditPostView> {
     super.dispose();
   }
 
-  void _submitEdit() {
+  Future<void> _submitEdit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
-    final success = context.read<BlogController>().updatePost(
+    final success = await context.read<BlogController>().updatePost(
           postId: widget.post.id,
           topic: _topicController.text.trim(),
           title: _titleController.text.trim(),
           content: _contentController.text.trim(),
         );
-    setState(() => _isSubmitting = false);
+    if (mounted) setState(() => _isSubmitting = false);
 
     if (success && mounted) {
       Navigator.of(context).pop();

@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
+import '../services/mongo_service.dart';
 
 class AuthController extends ChangeNotifier {
+  final MongoService _mongoService = MongoService();
   UserModel? _currentUser;
   final List<UserModel> _users = [
     UserModel(
@@ -24,7 +26,7 @@ class AuthController extends ChangeNotifier {
   bool get isAuthenticated => _currentUser != null;
   String? get errorMessage => _errorMessage;
 
-  bool login(String username, String password) {
+  Future<bool> login(String username, String password) async {
     _errorMessage = null;
     final trimmedUser = username.trim();
     final trimmedPass = password.trim();
@@ -35,6 +37,24 @@ class AuthController extends ChangeNotifier {
       return false;
     }
 
+    // Si MongoDB está conectado, buscar en la colección de usuarios
+    if (_mongoService.isConnected) {
+      final dbUser = await _mongoService.findUserByUsername(trimmedUser);
+      if (dbUser != null) {
+        if (dbUser.password == trimmedPass) {
+          _currentUser = dbUser;
+          _errorMessage = null;
+          notifyListeners();
+          return true;
+        } else {
+          _errorMessage = 'Credenciales incorrectas. Verifica tu usuario y clave.';
+          notifyListeners();
+          return false;
+        }
+      }
+    }
+
+    // Respaldo en memoria / offline
     final matchIndex = _users.indexWhere(
       (u) =>
           u.username.toLowerCase() == trimmedUser.toLowerCase() &&
@@ -53,12 +73,12 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  bool register({
+  Future<bool> register({
     required String email,
     required String username,
     required String password,
     required bool termsAccepted,
-  }) {
+  }) async {
     _errorMessage = null;
     final trimmedEmail = email.trim();
     final trimmedUser = username.trim();
@@ -94,6 +114,16 @@ class AuthController extends ChangeNotifier {
       return false;
     }
 
+    // Verificar en MongoDB si está conectado
+    if (_mongoService.isConnected) {
+      final existingUser = await _mongoService.findUserByUsername(trimmedUser);
+      if (existingUser != null) {
+        _errorMessage = 'El usuario o correo electrónico ya se encuentra registrado.';
+        notifyListeners();
+        return false;
+      }
+    }
+
     final exists = _users.any(
       (u) =>
           u.username.toLowerCase() == trimmedUser.toLowerCase() ||
@@ -112,6 +142,10 @@ class AuthController extends ChangeNotifier {
       email: trimmedEmail,
       password: trimmedPass,
     );
+
+    if (_mongoService.isConnected) {
+      await _mongoService.createUser(newUser);
+    }
 
     _users.add(newUser);
     _currentUser = newUser;

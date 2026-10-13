@@ -25,16 +25,16 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  void _submitLogin() {
+  Future<void> _submitLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     final authCtrl = context.read<AuthController>();
-    final success = authCtrl.login(
+    final success = await authCtrl.login(
       _usernameController.text.trim(),
       _passwordController.text.trim(),
     );
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
 
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

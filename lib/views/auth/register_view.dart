@@ -28,7 +28,7 @@ class _RegisterViewState extends State<RegisterView> {
     super.dispose();
   }
 
-  void _submitRegister() {
+  Future<void> _submitRegister() async {
     if (!_termsAccepted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -43,13 +43,13 @@ class _RegisterViewState extends State<RegisterView> {
 
     setState(() => _isLoading = true);
     final authCtrl = context.read<AuthController>();
-    final success = authCtrl.register(
+    final success = await authCtrl.register(
       email: _emailController.text.trim(),
       username: _usernameController.text.trim(),
       password: _passwordController.text.trim(),
       termsAccepted: _termsAccepted,
     );
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
 
     if (success && mounted) {
       Navigator.of(context).pop(); // Regresa o entra al flujo autenticado

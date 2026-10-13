@@ -135,14 +135,16 @@ class MyPostsView extends StatelessWidget {
                               ),
                             );
                           },
-                          onDelete: () {
-                            blogCtrl.deletePost(post.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Publicación eliminada correctamente.'),
-                                backgroundColor: AppColors.danger,
-                              ),
-                            );
+                          onDelete: () async {
+                            await blogCtrl.deletePost(post.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Publicación eliminada correctamente.'),
+                                  backgroundColor: AppColors.danger,
+                                ),
+                              );
+                            }
                           },
                         );
                       },

@@ -1,17 +1,243 @@
-# blog_nosql
+# 🌱 EcoBlog - Plataforma Móvil de Conciencia Ambiental (NoSQL MongoDB Demo)
 
-A new Flutter project.
+Aplicación móvil desarrollada en **Flutter** conectada directamente a una base de datos NoSQL en **MongoDB** para la divulgación y debate sobre sostenibilidad, conservación ecológica, reforestación urbana y prácticas de cero residuos.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🍃 Base de Datos NoSQL: MongoDB en Docker
 
-A few resources to get you started if this is your first Flutter project:
+El proyecto incluye configuración de Docker Compose para levantar MongoDB 7.0 con autenticación habilitada y precarga automática de colecciones e índices mediante un script de inicialización.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 🐘 Credenciales y Configuración de MongoDB
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| Parámetro | Usuario de Aplicación | Usuario Administrador (Root) |
+| :--- | :--- | :--- |
+| **Base de Datos** | `ecoblog_db` | `admin` |
+| **Usuario** | `ecouser` | `admin` |
+| **Contraseña** | `ecopassword123` | `adminpassword123` |
+| **Puerto Host** | `27017` | `27017` |
+| **Base de Autenticación** | `ecoblog_db` | `admin` |
+
+### 🧭 Conexión desde MongoDB Compass
+
+Abre **MongoDB Compass** y utiliza cualquiera de las siguientes URI de conexión:
+
+- **Conexión de Aplicación (Recomendada):**
+  ```text
+  mongodb://ecouser:ecopassword123@localhost:27017/ecoblog_db?authSource=ecoblog_db
+  ```
+
+- **Conexión como Administrador Root:**
+  ```text
+  mongodb://admin:adminpassword123@localhost:27017/admin?authSource=admin
+  ```
+
+### 📦 Comandos de Docker Compose
+
+- **Iniciar el contenedor de MongoDB en segundo plano:**
+  ```bash
+  docker compose up -d
+  ```
+
+- **Verificar el estado del contenedor y logs:**
+  ```bash
+  docker compose ps
+  docker compose logs mongodb
+  ```
+
+- **Detener el contenedor:**
+  ```bash
+  docker compose down
+  ```
+  *(Para reiniciar y volver a ejecutar el script de inicialización desde cero: `docker compose down -v`)*
+
+### 💻 Ingresar a la Base de Datos por Consola (CLI / `mongosh`)
+
+Puedes conectarte e interactuar con la base de datos directamente desde la terminal usando la herramienta interactiva `mongosh` dentro del contenedor Docker:
+
+1. **Ingresar como usuario de aplicación (`ecouser`):**
+   ```bash
+   docker exec -it ecoblog_mongodb mongosh -u ecouser -p ecopassword123 --authenticationDatabase ecoblog_db
+   ```
+
+2. **Ingresar como usuario administrador (`admin`):**
+   ```bash
+   docker exec -it ecoblog_mongodb mongosh -u admin -p adminpassword123 --authenticationDatabase admin
+   ```
+
+#### 📌 Comandos útiles en la consola de MongoDB:
+Una vez dentro de `mongosh`:
+
+```javascript
+// Cambiar a la base de datos del proyecto
+use ecoblog_db
+
+// Ver colecciones disponibles
+show collections
+
+// Contar documentos
+db.users.countDocuments()
+db.posts.countDocuments()
+
+// Consultar todos los usuarios
+db.users.find().pretty()
+
+// Consultar publicaciones y comentarios embebidos
+db.posts.find().pretty()
+
+// Buscar posts creados por un usuario específico
+db.posts.find({ creatorUsername: "david" })
+
+// Salir de mongosh
+exit
+```
+
+---
+
+## 📊 Modelo de Datos NoSQL (Document Store)
+
+MongoDB organiza la información en documentos BSON dentro de colecciones:
+
+### 1. Colección `users`
+Almacena las cuentas de usuario registradas:
+```json
+{
+  "_id": "user_1",
+  "username": "david",
+  "email": "david@planetaverde.org",
+  "password": "123456",
+  "createdAt": "2026-10-13T10:00:00.000Z"
+}
+```
+
+### 2. Colección `posts` (Patrón de Documento Embebido)
+Aprovecha el modelo NoSQL para incrustar los comentarios directamente en un arreglo dentro del documento del post, optimizando las consultas de lectura sin necesidad de joins relacionales:
+```json
+{
+  "_id": "seed_post_1",
+  "creatorUsername": "david",
+  "topic": "Energía Renovable",
+  "title": "Impacto de la energía solar comunitaria en zonas rurales",
+  "content": "La instalación de microrredes solares comunitarias...",
+  "createdAt": "2026-10-13T13:45:00.000Z",
+  "isEdited": false,
+  "comments": [
+    {
+      "id": "seed_comm_1",
+      "postId": "seed_post_1",
+      "userName": "elena_bio",
+      "date": "2026-10-13T14:45:00.000Z",
+      "comment": "Excelente iniciativa.",
+      "isEdited": false
+    }
+  ]
+}
+```
+
+---
+
+## 🚀 Características Principales
+
+### 🔐 Autenticación y Usuarios
+- **Autenticación directa en MongoDB**: Búsqueda y registro reactivo en la colección `users`.
+- **Validación de formularios**: Validación de correo, usuario y contraseña.
+- **Términos y Condiciones**: Modal interactivo de aceptación obligatoria.
+- **Cierre de sesión seguro**.
+
+### 📝 Gestión de Publicaciones (Blog)
+- **Feed interactivo conectado a MongoDB**: Carga cronológica de posts directamente de la colección `posts`.
+- **Búsqueda en tiempo real**: Filtrado por título reactivo.
+- **Creación de publicaciones**: Inserción directa en MongoDB con validación.
+- **Edición y eliminación**: Actualizaciones y eliminaciones sincronizadas en tiempo real con MongoDB.
+- **Mis Publicaciones**: Vista exclusiva para administrar los posts del usuario activo.
+- **Indicador de Conexión en la App**: Chip visual en la pantalla principal (🟢 *MongoDB: Conectado* / 🟡 *MongoDB: Offline* con reintento táctil).
+
+### 💬 Sistema de Comentarios Embebidos
+- **Bottom Sheet interactivo**: Panel deslizante para interactuar con los comentarios.
+- **Operaciones Atómicas NoSQL**:
+  - Adición usando operador `$push`.
+  - Actualización usando operador `$set` con selector posicional.
+  - Eliminación usando operador `$pull`.
+
+---
+
+## 🏗️ Arquitectura del Proyecto
+
+```text
+blog_nosql/
+├── compose.yaml          # Despliegue Docker de MongoDB 7.0 con autenticación
+├── mongo-init.js         # Script JS de inicialización (roles, índices y seed data)
+├── lib/
+│   ├── controllers/      # Controladores de estado (Provider)
+│   │   ├── auth_controller.dart
+│   │   └── blog_controller.dart
+│   ├── models/           # Modelos de datos con serialización BSON (toMap/fromMap)
+│   │   ├── blog_post_model.dart
+│   │   ├── comment_model.dart
+│   │   └── user_model.dart
+│   ├── services/         # Capa de conexión directa a base de datos
+│   │   └── mongo_service.dart (mongo_dart)
+│   ├── theme/            # Tema visual Material 3
+│   │   └── app_theme.dart
+│   ├── views/            # Pantallas de la aplicación
+│   │   ├── auth/         # Login y Registro
+│   │   ├── comments/     # BottomSheet interactivo de comentarios
+│   │   ├── home/         # Feed principal con indicador de conexión MongoDB
+│   │   └── posts/        # Creación, edición y administración de posts
+│   ├── widgets/          # Diálogos y componentes reutilizables
+│   └── main.dart         # Punto de entrada de la aplicación
+└── test/                 # Pruebas automatizadas (Unitarias y Widget tests)
+```
+
+---
+
+## 🔑 Credenciales de Prueba
+
+Usuarios precargados en la base de datos por `mongo-init.js`:
+
+| Usuario | Contraseña | Correo Electrónico |
+| :--- | :--- | :--- |
+| `david` | `123456` | `david@planetaverde.org` |
+| `elena_bio` | `123456` | `elena@ecovida.org` |
+| `marina_eco` | `123456` | `marina@bosques.org` |
+| `santiago_clima` | `123456` | `santiago@clima.org` |
+
+---
+
+## 🛠️ Requisitos e Instalación
+
+1. **Requisitos:**
+   - [Docker](https://docs.docker.com/get-docker/) y Docker Compose.
+   - [MongoDB Compass](https://www.mongodb.com/products/tools/compass) (instalado para visualización).
+   - [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.x+ con Dart 3.12+.
+
+2. **Levantar la Base de Datos:**
+   ```bash
+   docker compose up -d
+   ```
+
+3. **Descargar Dependencias de Flutter:**
+   ```bash
+   flutter pub get
+   ```
+
+4. **Ejecutar la Aplicación:**
+   - En **Linux Desktop**:
+     ```bash
+     flutter run -d linux
+     ```
+   - En **Emulador Android** *(el servicio conecta automáticamente a `10.0.2.2:27017`)*:
+     ```bash
+     flutter run
+     ```
+
+---
+
+## 🧪 Pruebas Automatizadas
+
+Ejecutar la suite completa de pruebas:
+
+```bash
+flutter test
+```
+*Las pruebas cubren autenticación, consultas, CRUD de posts y comentarios, y el árbol de widgets.*

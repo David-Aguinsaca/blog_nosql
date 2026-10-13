@@ -14,23 +14,23 @@ void main() {
       expect(authController.currentUser, isNull);
     });
 
-    test('Login with seed user david succeeds', () {
-      final success = authController.login('david', '123456');
+    test('Login with seed user david succeeds', () async {
+      final success = await authController.login('david', '123456');
       expect(success, true);
       expect(authController.isAuthenticated, true);
       expect(authController.currentUser?.username, 'david');
       expect(authController.errorMessage, isNull);
     });
 
-    test('Login with wrong password fails', () {
-      final success = authController.login('david', 'wrong_pass');
+    test('Login with wrong password fails', () async {
+      final success = await authController.login('david', 'wrong_pass');
       expect(success, false);
       expect(authController.isAuthenticated, false);
       expect(authController.errorMessage, isNotNull);
     });
 
-    test('Register fails if terms and conditions are not accepted', () {
-      final success = authController.register(
+    test('Register fails if terms and conditions are not accepted', () async {
+      final success = await authController.register(
         email: 'nuevo@ecovida.org',
         username: 'nuevo_usuario',
         password: 'password123',
@@ -44,8 +44,8 @@ void main() {
       );
     });
 
-    test('Register succeeds when terms are accepted and inputs are valid', () {
-      final success = authController.register(
+    test('Register succeeds when terms are accepted and inputs are valid', () async {
+      final success = await authController.register(
         email: 'nuevo@ecovida.org',
         username: 'nuevo_usuario',
         password: 'password123',
@@ -57,8 +57,8 @@ void main() {
       expect(authController.currentUser?.email, 'nuevo@ecovida.org');
     });
 
-    test('Logout clears currentUser', () {
-      authController.login('david', '123456');
+    test('Logout clears currentUser', () async {
+      await authController.login('david', '123456');
       expect(authController.isAuthenticated, true);
 
       authController.logout();

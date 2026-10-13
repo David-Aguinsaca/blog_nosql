@@ -32,4 +32,36 @@ class CommentModel {
       isEdited: isEdited ?? this.isEdited,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'postId': postId,
+      'userName': userName,
+      'date': date.toIso8601String(),
+      'comment': comment,
+      'isEdited': isEdited,
+    };
+  }
+
+  factory CommentModel.fromMap(Map<String, dynamic> map) {
+    DateTime parsedDate;
+    final rawDate = map['date'];
+    if (rawDate is DateTime) {
+      parsedDate = rawDate;
+    } else if (rawDate is String) {
+      parsedDate = DateTime.tryParse(rawDate) ?? DateTime.now();
+    } else {
+      parsedDate = DateTime.now();
+    }
+
+    return CommentModel(
+      id: map['id']?.toString() ?? '',
+      postId: map['postId']?.toString() ?? '',
+      userName: map['userName']?.toString() ?? '',
+      date: parsedDate,
+      comment: map['comment']?.toString() ?? '',
+      isEdited: map['isEdited'] == true,
+    );
+  }
 }
