@@ -89,8 +89,9 @@ class _EditPostViewState extends State<EditPostView> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _topicController,
+                  maxLength: 15,
                   decoration: const InputDecoration(
-                    hintText: 'Tema (ej. Cero Residuos, Energía Solar)',
+                    hintText: 'Tema (ej. Reciclaje, Energía Solar)',
                     prefixIcon: Icon(
                       Icons.spa_rounded,
                       color: AppColors.sageGreen,
@@ -100,9 +101,16 @@ class _EditPostViewState extends State<EditPostView> {
                     if (val == null || val.trim().isEmpty) {
                       return 'El tema no puede estar vacío.';
                     }
+                    if (val.trim().length < 3) {
+                      return 'El tema debe tener al menos 3 caracteres.';
+                    }
+                    if (val.trim().length > 15) {
+                      return 'El tema no puede tener más de 15 caracteres.';
+                    }
                     return null;
                   },
                 ),
+
 
                 const SizedBox(height: 20),
 

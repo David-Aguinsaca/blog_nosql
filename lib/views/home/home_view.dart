@@ -114,15 +114,24 @@ class _HomeViewState extends State<HomeView> {
               runSpacing: 6,
               children: [
                 ActionChip(
-                  label: const Text('127.0.0.1 (adb reverse)', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    '127.0.0.1 (adb reverse)',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   onPressed: () => hostController.text = '127.0.0.1',
                 ),
                 ActionChip(
-                  label: const Text('10.4.15.14 (LAN)', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    '10.4.15.14 (LAN)',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   onPressed: () => hostController.text = '10.4.15.14',
                 ),
                 ActionChip(
-                  label: const Text('10.0.2.2 (AVD)', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    '10.0.2.2 (AVD)',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   onPressed: () => hostController.text = '10.0.2.2',
                 ),
               ],
@@ -132,7 +141,10 @@ class _HomeViewState extends State<HomeView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -152,7 +164,9 @@ class _HomeViewState extends State<HomeView> {
                           ? 'Conectado a MongoDB en ${blogCtrl.mongoService.currentHost}:27017'
                           : 'No se pudo conectar a MongoDB: ${blogCtrl.mongoService.lastError ?? "Revisa la IP y el contenedor"}',
                     ),
-                    backgroundColor: success ? AppColors.sageGreen : AppColors.danger,
+                    backgroundColor: success
+                        ? AppColors.sageGreen
+                        : AppColors.danger,
                   ),
                 );
               }
@@ -193,7 +207,7 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
             const SizedBox(width: 8),
-            const Text('EcoBlog'),
+            const Text('TerraBlog'),
           ],
         ),
         actions: [
@@ -254,87 +268,87 @@ class _HomeViewState extends State<HomeView> {
                           color: AppColors.textDark,
                         ),
                       ),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onLongPress: kIsWeb ? null : () => _showMongoConfigDialog(context, blogCtrl),
-                        onTap: () async {
-                          if (kIsWeb) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'En navegadores web no se admiten sockets TCP directos a MongoDB. Para probar la base de datos en vivo ejecuta en Linux Desktop: flutter run -d linux',
-                                ),
-                                backgroundColor: AppColors.primaryTeal,
-                                duration: Duration(seconds: 4),
-                              ),
-                            );
-                            return;
-                          }
-                          if (!blogCtrl.mongoService.isConnected) {
-                            _showMongoConfigDialog(context, blogCtrl);
-                            return;
-                          }
-                          final success = await blogCtrl.initializeMongo();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  success
-                                      ? 'Conectado a MongoDB en ${blogCtrl.mongoService.currentHost}:27017'
-                                      : 'No se pudo conectar a MongoDB: ${blogCtrl.mongoService.lastError ?? "Revisa que docker compose esté activo."}',
-                                ),
-                                backgroundColor: success
-                                    ? AppColors.sageGreen
-                                    : AppColors.danger,
-                              ),
-                            );
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: blogCtrl.mongoService.isConnected
-                                ? Colors.green.shade50
-                                : Colors.amber.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: blogCtrl.mongoService.isConnected
-                                  ? Colors.green.shade300
-                                  : Colors.amber.shade400,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                size: 8,
-                                color: blogCtrl.mongoService.isConnected
-                                    ? Colors.green.shade700
-                                    : Colors.amber.shade800,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                blogCtrl.mongoService.isConnected
-                                    ? 'MongoDB: Conectado'
-                                    : (kIsWeb
-                                        ? 'Web: Modo Local'
-                                        : 'MongoDB: Offline (Reintentar)'),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: blogCtrl.mongoService.isConnected
-                                      ? Colors.green.shade900
-                                      : Colors.amber.shade900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // InkWell(
+                      //   borderRadius: BorderRadius.circular(8),
+                      //   onLongPress: kIsWeb ? null : () => _showMongoConfigDialog(context, blogCtrl),
+                      //   onTap: () async {
+                      //     if (kIsWeb) {
+                      //       ScaffoldMessenger.of(context).showSnackBar(
+                      //         const SnackBar(
+                      //           content: Text(
+                      //             'En navegadores web no se admiten sockets TCP directos a MongoDB. Para probar la base de datos en vivo ejecuta en Linux Desktop: flutter run -d linux',
+                      //           ),
+                      //           backgroundColor: AppColors.primaryTeal,
+                      //           duration: Duration(seconds: 4),
+                      //         ),
+                      //       );
+                      //       return;
+                      //     }
+                      //     if (!blogCtrl.mongoService.isConnected) {
+                      //       _showMongoConfigDialog(context, blogCtrl);
+                      //       return;
+                      //     }
+                      //     final success = await blogCtrl.initializeMongo();
+                      //     if (context.mounted) {
+                      //       ScaffoldMessenger.of(context).showSnackBar(
+                      //         SnackBar(
+                      //           content: Text(
+                      //             success
+                      //                 ? 'Conectado a MongoDB en ${blogCtrl.mongoService.currentHost}:27017'
+                      //                 : 'No se pudo conectar a MongoDB: ${blogCtrl.mongoService.lastError ?? "Revisa que docker compose esté activo."}',
+                      //           ),
+                      //           backgroundColor: success
+                      //               ? AppColors.sageGreen
+                      //               : AppColors.danger,
+                      //         ),
+                      //       );
+                      //     }
+                      //   },
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(
+                      //       horizontal: 8,
+                      //       vertical: 3,
+                      //     ),
+                      //     decoration: BoxDecoration(
+                      //       color: blogCtrl.mongoService.isConnected
+                      //           ? Colors.green.shade50
+                      //           : Colors.amber.shade50,
+                      //       borderRadius: BorderRadius.circular(8),
+                      //       border: Border.all(
+                      //         color: blogCtrl.mongoService.isConnected
+                      //             ? Colors.green.shade300
+                      //             : Colors.amber.shade400,
+                      //       ),
+                      //     ),
+                      //     child: Row(
+                      //       mainAxisSize: MainAxisSize.min,
+                      //       children: [
+                      //         Icon(
+                      //           Icons.circle,
+                      //           size: 8,
+                      //           color: blogCtrl.mongoService.isConnected
+                      //               ? Colors.green.shade700
+                      //               : Colors.amber.shade800,
+                      //         ),
+                      //         const SizedBox(width: 5),
+                      //         Text(
+                      //           blogCtrl.mongoService.isConnected
+                      //               ? 'MongoDB: Conectado'
+                      //               : (kIsWeb
+                      //                   ? 'Web: Modo Local'
+                      //                   : 'MongoDB: Offline (Reintentar)'),
+                      //           style: TextStyle(
+                      //             fontSize: 11,
+                      //             fontWeight: FontWeight.bold,
+                      //             color: blogCtrl.mongoService.isConnected
+                      //                 ? Colors.green.shade900
+                      //                 : Colors.amber.shade900,
+                      //           ),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 10),

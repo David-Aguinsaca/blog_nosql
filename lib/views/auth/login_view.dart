@@ -86,7 +86,7 @@ class _LoginViewState extends State<LoginView> {
 
                   // Títulos
                   const Text(
-                    'EcoBlog',
+                    'TerraBlog',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 28,

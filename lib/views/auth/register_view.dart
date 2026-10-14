@@ -55,14 +55,18 @@ class _RegisterViewState extends State<RegisterView> {
       Navigator.of(context).pop(); // Regresa o entra al flujo autenticado
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Cuenta creada con éxito! Bienvenido a la comunidad ecológica.'),
+          content: Text(
+            '¡Cuenta creada con éxito! Bienvenido a la comunidad ecológica.',
+          ),
           backgroundColor: AppColors.sageGreen,
         ),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authCtrl.errorMessage ?? 'Error al registrar la cuenta.'),
+          content: Text(
+            authCtrl.errorMessage ?? 'Error al registrar la cuenta.',
+          ),
           backgroundColor: AppColors.danger,
         ),
       );
@@ -82,14 +86,17 @@ class _RegisterViewState extends State<RegisterView> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Únete a EcoBlog',
+                    'Únete a TerraBlog',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -223,7 +230,10 @@ class _RegisterViewState extends State<RegisterView> {
 
                   // Checkbox Términos y Condiciones
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.paleLime.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(12),
@@ -314,7 +324,10 @@ class _RegisterViewState extends State<RegisterView> {
                     children: [
                       const Text(
                         '¿Ya tienes una cuenta? ',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 13.5),
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 13.5,
+                        ),
                       ),
                       GestureDetector(
                         onTap: () => Navigator.of(context).pop(),

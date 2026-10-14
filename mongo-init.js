@@ -1,5 +1,5 @@
 // ========================================================
-// Script de Inicialización de MongoDB para EcoBlog (NoSQL)
+// Script de Inicialización de MongoDB para TerraBlog (NoSQL)
 // Se ejecuta automáticamente al crear el contenedor
 // ========================================================
 

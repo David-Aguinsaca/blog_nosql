@@ -44,3 +44,15 @@ sudo apt install -y mongodb-mongosh
 ```bash
 mongosh "mongodb+srv://appambiente.astsdqz.mongodb.net/" --apiVersion 1 --username brayanaguinsaca_db_user
 ```
+
+---
+
+## 4. Ejecutar Script Seeder de Datos de Prueba
+
+Para poblar la base de datos de MongoDB Atlas ejecutando directamente el script [`mongo-seeder.js`](mongo-seeder.js) desde tu terminal sin entrar a la consola interactiva:
+
+```bash
+mongosh "mongodb+srv://appambiente.astsdqz.mongodb.net/ecoblog_db" --username brayanaguinsaca_db_user --file mongo-seeder.js
+```
+
+*(Te solicitará la contraseña de forma interactiva y segura)*.

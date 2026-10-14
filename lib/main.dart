@@ -35,7 +35,7 @@ class EcoBlogApp extends StatelessWidget {
       child: Consumer<AuthController>(
         builder: (context, authCtrl, _) {
           return MaterialApp(
-            title: 'EcoBlog - Medio Ambiente',
+            title: 'TerraBlog - Medio Ambiente',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             home: authCtrl.isAuthenticated

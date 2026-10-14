@@ -90,11 +90,17 @@ class MyPostsView extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.paleLime.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.softOlive, width: 0.8),
+                      border: Border.all(
+                        color: AppColors.softOlive,
+                        width: 0.8,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -106,7 +112,7 @@ class MyPostsView extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Tienes ${myPosts.length} ${myPosts.length == 1 ? "publicación activa" : "publicaciones activas"} en EcoBlog.',
+                            'Tienes ${myPosts.length} ${myPosts.length == 1 ? "publicación activa" : "publicaciones activas"} en TerraBlog.',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -140,7 +146,9 @@ class MyPostsView extends StatelessWidget {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Publicación eliminada correctamente.'),
+                                  content: Text(
+                                    'Publicación eliminada correctamente.',
+                                  ),
                                   backgroundColor: AppColors.danger,
                                 ),
                               );

@@ -18,9 +18,11 @@ class ConfirmDeleteDialog extends StatelessWidget {
     required String title,
     required String message,
     String confirmText = 'Eliminar',
+    bool useRootNavigator = true,
   }) async {
     final result = await showDialog<bool>(
       context: context,
+      useRootNavigator: useRootNavigator,
       builder: (ctx) => ConfirmDeleteDialog(
         title: title,
         message: message,
@@ -29,6 +31,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
     );
     return result ?? false;
   }
+
 
   @override
   Widget build(BuildContext context) {

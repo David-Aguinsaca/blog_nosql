@@ -129,9 +129,10 @@ class _CreatePostViewState extends State<CreatePostView> {
                 TextFormField(
                   controller: _topicController,
                   textInputAction: TextInputAction.next,
+                  maxLength: 15,
                   decoration: const InputDecoration(
                     hintText:
-                        'Ingresa el tema (ej. Reforestación, Cero Residuos...)',
+                        'Ingresa el tema (ej. Reforestación, Reciclaje...)',
                     prefixIcon: Icon(
                       Icons.spa_rounded,
                       color: AppColors.sageGreen,
@@ -144,6 +145,9 @@ class _CreatePostViewState extends State<CreatePostView> {
                     }
                     if (val.trim().length < 3) {
                       return 'El tema debe tener al menos 3 caracteres.';
+                    }
+                    if (val.trim().length > 15) {
+                      return 'El tema no puede tener más de 15 caracteres.';
                     }
                     return null;
                   },
@@ -227,7 +231,7 @@ class _CreatePostViewState extends State<CreatePostView> {
                           ),
                         )
                       : null,
-                  label: const Text('Publicar en EcoBlog'),
+                  label: const Text('Publicar en TerraBlog'),
                 ),
               ],
             ),

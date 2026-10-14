@@ -1,4 +1,4 @@
-# 🌱 EcoBlog - Plataforma Móvil de Conciencia Ambiental (NoSQL MongoDB Demo)
+# 🌱 TerraBlog - Plataforma Móvil de Conciencia Ambiental (NoSQL MongoDB Demo)
 
 Aplicación móvil desarrollada en **Flutter** conectada directamente a una base de datos NoSQL en **MongoDB** para la divulgación y debate sobre sostenibilidad, conservación ecológica, reforestación urbana y prácticas de cero residuos.
 
@@ -251,6 +251,67 @@ El proyecto inicia limpio, sin usuarios ni publicaciones mockup precargadas:
 
 ---
 
+## 📱 Generación de APK para Dispositivos Físicos (Android)
+
+Para generar el paquete instalable `.apk` y utilizar la aplicación directamente en teléfonos o tablets físicas sin necesidad de tener el equipo conectado por cable a la computadora:
+
+### 1. Requisitos Previos
+- **Configuración de Conexión (`.env`):** Asegúrate de que el archivo `.env` apunte a una dirección accesible desde el dispositivo móvil:
+  - **MongoDB Atlas (Recomendado):** `MONGO_HOST=appambiente.astsdqz.mongodb.net` (funciona con datos móviles o Wi-Fi).
+  - **Docker Local:** Si usas Docker en tu PC, el teléfono y la computadora deben estar en la **misma red Wi-Fi** y `MONGO_HOST` debe tener la IP local de tu PC (ej. `192.168.1.X` o `10.4.15.14`).
+- **Permisos de Red:** La aplicación ya cuenta con `<uses-permission android:name="android.permission.INTERNET"/>` en su `AndroidManifest.xml`.
+
+---
+
+### 2. Comandos de Compilación
+
+Abre una terminal en la raíz del proyecto y ejecuta:
+
+#### Opción A: APK Release universal (Recomendado)
+Genera un único archivo `.apk` compatible con la mayoría de arquitecturas de procesadores Android:
+
+```bash
+flutter build apk --release
+```
+📍 **Ubicación del archivo generado:**
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+#### Opción B: APKs divididos por arquitectura (APK más liviano)
+Reduce el tamaño del instalador generando un APK específico para cada tipo de procesador (`armeabi-v7a`, `arm64-v8a`, `x86_64`):
+
+```bash
+flutter build apk --release --split-per-abi
+```
+📍 **Ubicación de los archivos generados:**
+```text
+build/app/outputs/flutter-apk/app-arm64-v8a-release.apk  (Para el 95% de teléfonos modernos)
+build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk (Para dispositivos más antiguos)
+```
+
+---
+
+### 3. Instalación en el Dispositivo Físico
+
+Puedes transferir e instalar el archivo generado por cualquiera de estos métodos:
+
+1. **Vía USB con ADB (Directo):**
+   Conecta tu teléfono con *Depuración USB* activada y ejecuta:
+   ```bash
+   flutter install
+   # O directamente con adb:
+   adb install build/app/outputs/flutter-apk/app-release.apk
+   ```
+
+2. **Sin cables (Manual):**
+   - Envía el archivo `app-release.apk` a tu teléfono vía **Google Drive**, **WhatsApp**, **Telegram** o cable USB.
+   - En tu teléfono, abre el archivo descargado.
+   - Si Android lo solicita, activa el permiso de **"Instalar aplicaciones de fuentes desconocidas"** para ese medio.
+   - Presiona **Instalar** y abre la app.
+
+---
+
 ## 🧪 Pruebas Automatizadas
 
 Ejecutar la suite completa de pruebas:
@@ -259,3 +320,4 @@ Ejecutar la suite completa de pruebas:
 flutter test
 ```
 *Las pruebas cubren autenticación, consultas, CRUD de posts y comentarios, y el árbol de widgets.*
+

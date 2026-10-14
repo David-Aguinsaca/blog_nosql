@@ -111,7 +111,7 @@ class PostCard extends StatelessWidget {
                           if (post.isEdited) ...[
                             const SizedBox(width: 4),
                             const Text(
-                              '• editado',
+                              'editado',
                               style: TextStyle(
                                 color: AppColors.textLight,
                                 fontSize: 11,
@@ -127,7 +127,10 @@ class PostCard extends StatelessWidget {
 
                 // Chip de Tema Ambiental
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.paleLime.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(12),
@@ -195,7 +198,10 @@ class PostCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   onTap: () => CommentsBottomSheet.show(context, post.id),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -227,7 +233,10 @@ class PostCard extends StatelessWidget {
                   // Botón Editar
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -252,7 +261,10 @@ class PostCard extends StatelessWidget {
                   // Botón Eliminar
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),

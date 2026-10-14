@@ -76,68 +76,30 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   }
 
   Future<void> _handleEditComment(CommentModel comment) async {
-    final editController = TextEditingController(text: comment.comment);
-    final confirmed = await showDialog<bool>(
+    final updatedText = await showDialog<String>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Editar comentario',
-          style: TextStyle(
-            color: AppColors.primaryTeal,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: TextField(
-          controller: editController,
-          maxLines: 3,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Modifica tu comentario...',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.textMuted),
-            ),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primaryTeal,
-            ),
-            onPressed: () => Navigator.of(dialogCtx).pop(true),
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
+      useRootNavigator: true,
+      builder: (dialogCtx) => _EditCommentDialog(initialText: comment.comment),
     );
 
-    if (confirmed == true && mounted) {
-      final updatedText = editController.text.trim();
-      if (updatedText.isNotEmpty) {
-        await context.read<BlogController>().updateComment(
-          postId: widget.postId,
-          commentId: comment.id,
-          newCommentText: updatedText,
+    if (updatedText != null && updatedText.isNotEmpty && mounted) {
+      await context.read<BlogController>().updateComment(
+        postId: widget.postId,
+        commentId: comment.id,
+        newCommentText: updatedText,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comentario actualizado correctamente'),
+            backgroundColor: AppColors.sageGreen,
+            duration: Duration(seconds: 2),
+          ),
         );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Comentario actualizado correctamente'),
-              backgroundColor: AppColors.sageGreen,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
       }
     }
-    editController.dispose();
   }
+
 
   Future<void> _handleDeleteComment(CommentModel comment) async {
     final shouldDelete = await ConfirmDeleteDialog.show(
@@ -503,3 +465,72 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     );
   }
 }
+
+class _EditCommentDialog extends StatefulWidget {
+  final String initialText;
+
+  const _EditCommentDialog({required this.initialText});
+
+  @override
+  State<_EditCommentDialog> createState() => _EditCommentDialogState();
+}
+
+class _EditCommentDialogState extends State<_EditCommentDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Editar comentario',
+        style: TextStyle(
+          color: AppColors.primaryTeal,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      content: TextField(
+        controller: _controller,
+        maxLines: 3,
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: 'Modifica tu comentario...',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text(
+            'Cancelar',
+            style: TextStyle(color: AppColors.textMuted),
+          ),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primaryTeal,
+          ),
+          onPressed: () {
+            final text = _controller.text.trim();
+            Navigator.of(context).pop(text);
+          },
+          child: const Text('Guardar'),
+        ),
+      ],
+    );
+  }
+}
+
