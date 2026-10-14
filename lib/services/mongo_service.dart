@@ -87,8 +87,9 @@ class MongoService {
     }
 
     _currentHost = await _resolveBestHost(host);
+
     final uri =
-        'mongodb://$_user:$_password@$_currentHost:$_port/$_dbName?authSource=$_dbName';
+        'mongodb+srv://$_user:$_password@appambiente.astsdqz.mongodb.net/$_dbName?appName=AppAmbiente';
 
     try {
       if (_db != null && _db!.isConnected) {
