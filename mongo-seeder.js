@@ -10,24 +10,26 @@ if (!appDb) {
   // ============================================================================
   // 2. DATOS DE PRUEBA: 3 USUARIOS
   // ============================================================================
+  // Contraseña en texto plano para los 3 usuarios de prueba: "password123"
+  // Hasheada con BCrypt (costo 10) para no almacenar texto plano en MongoDB
   const mockUsers = [
     {
       _id: "user_seed_001",
       username: "elena_verde",
       email: "elena.verde@ecoblog.org",
-      password: "password123"
+      password: "$2a$10$vEu6iBgLChIOQOpjT1tYQOwdhroYjjtoVjjz47a4PmvG66oQthHUy"
     },
     {
       _id: "user_seed_002",
       username: "carlos_solar",
       email: "carlos.solar@ecoblog.org",
-      password: "password123"
+      password: "$2a$10$vEu6iBgLChIOQOpjT1tYQOwdhroYjjtoVjjz47a4PmvG66oQthHUy"
     },
     {
       _id: "user_seed_003",
       username: "marina_oceano",
       email: "marina.oceano@ecoblog.org",
-      password: "password123"
+      password: "$2a$10$vEu6iBgLChIOQOpjT1tYQOwdhroYjjtoVjjz47a4PmvG66oQthHUy"
     }
   ];
 

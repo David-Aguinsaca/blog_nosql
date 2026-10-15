@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:blog_nosql/controllers/auth_controller.dart';
+import 'package:blog_nosql/services/password_service.dart';
 
 void main() {
   group('AuthController Tests', () {
@@ -26,6 +27,9 @@ void main() {
         termsAccepted: true,
       );
       expect(regSuccess, true);
+      // Validar que la contraseña guardada en el usuario NO es texto plano
+      expect(authController.currentUser?.password, isNot(equals('password123')));
+      expect(PasswordService.isBcryptHash(authController.currentUser!.password), isTrue);
 
       authController.logout();
       expect(authController.isAuthenticated, false);
@@ -35,6 +39,32 @@ void main() {
       expect(authController.isAuthenticated, true);
       expect(authController.currentUser?.username, uname);
       expect(authController.errorMessage, isNull);
+    });
+
+    test('Register stores password hashed with BCrypt and not in plain text', () async {
+      final id = DateTime.now().microsecondsSinceEpoch;
+      final uname = 'hash_user_$id';
+      final email = 'hash_user_$id@planetaverde.org';
+      const rawPassword = 'MiPasswordSeguro2026!';
+
+      final regSuccess = await authController.register(
+        email: email,
+        username: uname,
+        password: rawPassword,
+        termsAccepted: true,
+      );
+      expect(regSuccess, true);
+
+      final registeredUser = authController.currentUser;
+      expect(registeredUser, isNotNull);
+      expect(registeredUser!.password, isNot(equals(rawPassword)));
+      expect(PasswordService.isBcryptHash(registeredUser.password), isTrue);
+
+      authController.logout();
+
+      final loginSuccess = await authController.login(uname, rawPassword);
+      expect(loginSuccess, true);
+      expect(authController.isAuthenticated, true);
     });
 
     test('Login with wrong password fails', () async {

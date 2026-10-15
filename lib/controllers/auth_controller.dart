@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../services/mongo_service.dart';
+import '../services/password_service.dart';
 
 class AuthController extends ChangeNotifier {
   final MongoService _mongoService = MongoService();
@@ -32,8 +33,15 @@ class AuthController extends ChangeNotifier {
     if (_mongoService.isConnected) {
       final dbUser = await _mongoService.findUserByUsername(trimmedUser);
       if (dbUser != null) {
-        if (dbUser.password == trimmedPass) {
-          _currentUser = dbUser;
+        if (PasswordService.verifyPassword(trimmedPass, dbUser.password)) {
+          // Migración progresiva: si la clave era texto plano antiguo, actualizar a hash BCrypt
+          if (!PasswordService.isBcryptHash(dbUser.password)) {
+            final newHash = PasswordService.hashPassword(trimmedPass);
+            await _mongoService.updateUserPassword(dbUser.id, newHash);
+            _currentUser = dbUser.copyWith(password: newHash);
+          } else {
+            _currentUser = dbUser;
+          }
           _errorMessage = null;
           notifyListeners();
           return true;
@@ -49,11 +57,18 @@ class AuthController extends ChangeNotifier {
     final matchIndex = _users.indexWhere(
       (u) =>
           u.username.toLowerCase() == trimmedUser.toLowerCase() &&
-          u.password == trimmedPass,
+          PasswordService.verifyPassword(trimmedPass, u.password),
     );
 
     if (matchIndex != -1) {
-      _currentUser = _users[matchIndex];
+      var matchedUser = _users[matchIndex];
+      // Si la clave en memoria era texto plano, actualizar a hash BCrypt
+      if (!PasswordService.isBcryptHash(matchedUser.password)) {
+        final newHash = PasswordService.hashPassword(trimmedPass);
+        matchedUser = matchedUser.copyWith(password: newHash);
+        _users[matchIndex] = matchedUser;
+      }
+      _currentUser = matchedUser;
       _errorMessage = null;
       notifyListeners();
       return true;
@@ -131,11 +146,13 @@ class AuthController extends ChangeNotifier {
       return false;
     }
 
+    final hashedPassword = PasswordService.hashPassword(trimmedPass);
+
     final newUser = UserModel(
       id: 'user_${DateTime.now().millisecondsSinceEpoch}',
       username: trimmedUser,
       email: trimmedEmail,
-      password: trimmedPass,
+      password: hashedPassword,
     );
 
     if (_mongoService.isConnected) {
