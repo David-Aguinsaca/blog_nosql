@@ -1,0 +1,219 @@
+{
+  "version": "0.1",
+  "tables": [
+    {
+      "id": "table_users_001",
+      "tableName": "users",
+      "x": 80,
+      "y": 120,
+      "fields": [
+        {
+          "id": "f_users_id",
+          "name": "_id",
+          "type": "objectId",
+          "PK": true,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_users_username",
+          "name": "username",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_users_email",
+          "name": "email",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_users_password",
+          "name": "password",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_users_createdAt",
+          "name": "createdAt",
+          "type": "date",
+          "PK": false,
+          "isArray": false,
+          "isNN": false
+        }
+      ]
+    },
+    {
+      "id": "table_posts_002",
+      "tableName": "posts",
+      "x": 480,
+      "y": 120,
+      "fields": [
+        {
+          "id": "f_posts_id",
+          "name": "_id",
+          "type": "objectId",
+          "PK": true,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_posts_creatorUsername",
+          "name": "creatorUsername",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_posts_topic",
+          "name": "topic",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_posts_title",
+          "name": "title",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_posts_content",
+          "name": "content",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_posts_createdAt",
+          "name": "createdAt",
+          "type": "date",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_posts_isEdited",
+          "name": "isEdited",
+          "type": "bool",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        }
+      ]
+    },
+    {
+      "id": "table_comments_003",
+      "tableName": "comments",
+      "x": 880,
+      "y": 120,
+      "fields": [
+        {
+          "id": "f_comments_id",
+          "name": "_id",
+          "type": "string",
+          "PK": true,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_comments_postId",
+          "name": "postId",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_comments_parentCommentId",
+          "name": "parentCommentId",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": false
+        },
+        {
+          "id": "f_comments_userName",
+          "name": "userName",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_comments_date",
+          "name": "date",
+          "type": "date",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_comments_comment",
+          "name": "comment",
+          "type": "string",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        },
+        {
+          "id": "f_comments_isEdited",
+          "name": "isEdited",
+          "type": "bool",
+          "PK": false,
+          "isArray": false,
+          "isNN": true
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel_users_posts",
+      "fromTableId": "table_users_001",
+      "toTableId": "table_posts_002",
+      "fromFieldId": "f_users_username",
+      "toFieldId": "f_posts_creatorUsername",
+      "type": "1:M"
+    },
+    {
+      "id": "rel_posts_comments",
+      "fromTableId": "table_posts_002",
+      "toTableId": "table_comments_003",
+      "fromFieldId": "f_posts_id",
+      "toFieldId": "f_comments_postId",
+      "type": "1:M"
+    },
+    {
+      "id": "rel_comments_parent_self",
+      "fromTableId": "table_comments_003",
+      "toTableId": "table_comments_003",
+      "fromFieldId": "f_comments_id",
+      "toFieldId": "f_comments_parentCommentId",
+      "type": "1:M"
+    }
+  ],
+  "notes": [
+    {
+      "id": "note_nosql_architecture",
+      "title": "TerraBlog NoSQL Schema",
+      "description": "Esquema desacoplado y normalizado para MongoDB.\n- users: Colección de usuarios autenticados.\n- posts: Publicaciones ambientales.\n- comments: Comentarios y subcomentarios jerárquicos (parentCommentId).",
+      "x": 80,
+      "y": 420,
+      "width": 320,
+      "height": 140
+    }
+  ],
+  "selectedElementId": null
+}
