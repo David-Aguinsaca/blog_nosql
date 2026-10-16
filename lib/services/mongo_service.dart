@@ -170,6 +170,23 @@ class MongoService {
     }
   }
 
+  Future<bool> updateUserPassword(String userId, String newHashedPassword) async {
+    if (!isConnected || _usersCollection == null) return false;
+    try {
+      // Sentencia directa MongoDB: db.users.updateOne({ _id: userId }, { $set: { password: ... } })
+      final res = await _usersCollection!.updateOne(
+        {'_id': userId},
+        {
+          r'$set': {'password': newHashedPassword},
+        },
+      );
+      return res.isSuccess;
+    } catch (e) {
+      debugPrint('Error en updateUserPassword: $e');
+      return false;
+    }
+  }
+
   // ================= POSTS =================
 
   Future<List<BlogPostModel>> fetchPosts() async {
