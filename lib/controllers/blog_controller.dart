@@ -95,6 +95,8 @@ class BlogController extends ChangeNotifier {
     }
   }
 
+  static int _idCounter = 0;
+
   Future<BlogPostModel> addPost({
     required String creatorUsername,
     required String topic,
@@ -102,7 +104,7 @@ class BlogController extends ChangeNotifier {
     required String content,
   }) async {
     final newPost = BlogPostModel(
-      id: 'post_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'post_${DateTime.now().microsecondsSinceEpoch}_${++_idCounter}',
       creatorUsername: creatorUsername,
       createdAt: DateTime.now(),
       topic: topic.trim(),
@@ -165,28 +167,59 @@ class BlogController extends ChangeNotifier {
     return false;
   }
 
+  Set<String> _findCommentFamilyIds(
+    List<CommentModel> allComments,
+    String rootId,
+  ) {
+    final idsToDelete = <String>{rootId};
+    var addedNew = true;
+    while (addedNew) {
+      addedNew = false;
+      for (final c in allComments) {
+        if (c.parentCommentId != null &&
+            idsToDelete.contains(c.parentCommentId) &&
+            !idsToDelete.contains(c.id)) {
+          idsToDelete.add(c.id);
+          addedNew = true;
+        }
+      }
+    }
+    return idsToDelete;
+  }
+
   Future<bool> addComment({
     required String postId,
     required String userName,
     required String commentText,
+    String? parentCommentId,
   }) async {
     final index = _posts.indexWhere((p) => p.id == postId);
     if (index != -1) {
       final post = _posts[index];
+
+      // Si se especifica parentCommentId, verificar que el comentario padre exista
+      if (parentCommentId != null &&
+          !post.comments.any((c) => c.id == parentCommentId)) {
+        return false;
+      }
+
       final newComment = CommentModel(
-        id: 'comment_${DateTime.now().millisecondsSinceEpoch}',
+        id: 'comment_${DateTime.now().microsecondsSinceEpoch}_${++_idCounter}',
         postId: postId,
+        parentCommentId: parentCommentId,
         userName: userName,
         date: DateTime.now(),
         comment: commentText.trim(),
       );
 
-      final updatedComments = List<CommentModel>.from(post.comments)..add(newComment);
+
+      final updatedComments = List<CommentModel>.from(post.comments)
+        ..add(newComment);
       _posts[index] = post.copyWith(comments: updatedComments);
       notifyListeners();
 
       if (_mongoService.isConnected) {
-        await _mongoService.addComment(postId, newComment);
+        await _mongoService.addComment(newComment);
       }
       return true;
     }
@@ -215,7 +248,7 @@ class BlogController extends ChangeNotifier {
         notifyListeners();
 
         if (_mongoService.isConnected) {
-          await _mongoService.updateComment(postId, updatedComment);
+          await _mongoService.updateComment(updatedComment);
         }
         return true;
       }
@@ -230,12 +263,20 @@ class BlogController extends ChangeNotifier {
     final postIndex = _posts.indexWhere((p) => p.id == postId);
     if (postIndex != -1) {
       final post = _posts[postIndex];
-      final updatedList = post.comments.where((c) => c.id != commentId).toList();
+      final targetCommentExists = post.comments.any((c) => c.id == commentId);
+      if (!targetCommentExists) return false;
+
+      // Eliminación en cascada: identifica el comentario y todas sus respuestas hijas
+      final idsToDelete = _findCommentFamilyIds(post.comments, commentId);
+
+      final updatedList = post.comments
+          .where((c) => !idsToDelete.contains(c.id))
+          .toList();
       _posts[postIndex] = post.copyWith(comments: updatedList);
       notifyListeners();
 
       if (_mongoService.isConnected) {
-        await _mongoService.deleteComment(postId, commentId);
+        await _mongoService.deleteCommentsByIds(idsToDelete.toList());
       }
       return true;
     }
@@ -247,4 +288,22 @@ class BlogController extends ChangeNotifier {
     if (index != -1) return _posts[index];
     return null;
   }
+
+  List<CommentModel> getRootComments(String postId) {
+    final post = getPostById(postId);
+    if (post == null) return [];
+    return post.comments.where((c) => c.parentCommentId == null).toList();
+  }
+
+  List<CommentModel> getRepliesForComment(
+    String postId,
+    String parentCommentId,
+  ) {
+    final post = getPostById(postId);
+    if (post == null) return [];
+    return post.comments
+        .where((c) => c.parentCommentId == parentCommentId)
+        .toList();
+  }
 }
+

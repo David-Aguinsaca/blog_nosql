@@ -43,8 +43,8 @@ class BlogPostModel {
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
+  Map<String, dynamic> toMap({bool includeComments = false}) {
+    final map = <String, dynamic>{
       '_id': id,
       'creatorUsername': creatorUsername,
       'createdAt': createdAt.toIso8601String(),
@@ -52,8 +52,11 @@ class BlogPostModel {
       'title': title,
       'content': content,
       'isEdited': isEdited,
-      'comments': comments.map((c) => c.toMap()).toList(),
     };
+    if (includeComments) {
+      map['comments'] = comments.map((c) => c.toMap()).toList();
+    }
+    return map;
   }
 
   factory BlogPostModel.fromMap(Map<String, dynamic> map) {

@@ -27,6 +27,7 @@ class CommentsBottomSheet extends StatefulWidget {
 class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   final TextEditingController _newCommentController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  CommentModel? _replyingTo;
   bool _isSubmitting = false;
 
   @override
@@ -64,15 +65,31 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     }
 
     setState(() => _isSubmitting = true);
-    await blogCtrl.addComment(
+    final success = await blogCtrl.addComment(
       postId: widget.postId,
       userName: currentUser.username,
       commentText: text,
+      parentCommentId: _replyingTo?.id,
     );
 
-    _newCommentController.clear();
-    _focusNode.unfocus();
-    if (mounted) setState(() => _isSubmitting = false);
+    if (mounted) {
+      if (success) {
+        _newCommentController.clear();
+        _focusNode.unfocus();
+        setState(() {
+          _replyingTo = null;
+          _isSubmitting = false;
+        });
+      } else {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo publicar el comentario.'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _handleEditComment(CommentModel comment) async {
@@ -100,13 +117,12 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     }
   }
 
-
   Future<void> _handleDeleteComment(CommentModel comment) async {
     final shouldDelete = await ConfirmDeleteDialog.show(
       context,
       title: 'Eliminar comentario',
       message:
-          '¿Estás seguro de que deseas eliminar este comentario? Esta acción no se puede deshacer.',
+          '¿Estás seguro de que deseas eliminar este comentario? Se eliminarán también todas sus respuestas.',
       confirmText: 'Eliminar',
     );
 
@@ -116,15 +132,253 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
         commentId: comment.id,
       );
       if (mounted) {
+        if (_replyingTo?.id == comment.id) {
+          setState(() => _replyingTo = null);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Comentario eliminado'),
+            content: Text('Comentario y respuestas eliminados'),
             backgroundColor: AppColors.danger,
             duration: Duration(seconds: 2),
           ),
         );
       }
     }
+  }
+
+  Widget _buildCommentCard(
+    CommentModel c,
+    String? currentUsername,
+    bool isReply,
+  ) {
+    final isOwner =
+        currentUsername != null &&
+        c.userName.toLowerCase() == currentUsername.toLowerCase();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isReply
+            ? Colors.white
+            : (isOwner
+                ? AppColors.paleLime.withValues(alpha: 0.45)
+                : AppColors.background),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isReply
+              ? AppColors.softOlive.withValues(alpha: 0.6)
+              : (isOwner ? AppColors.softOlive : AppColors.borderLight),
+          width: 1,
+        ),
+        boxShadow: isReply
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: isReply ? 12 : 14,
+                backgroundColor: isReply
+                    ? AppColors.paleLime
+                    : AppColors.sageGreen,
+                child: Text(
+                  c.userName.isNotEmpty ? c.userName[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: isReply ? AppColors.primaryTeal : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: isReply ? 11 : 12,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            c.userName,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isReply ? 12.5 : 13,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ),
+                        if (isOwner) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryTeal,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Tú',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (c.isEdited) ...[
+                          const SizedBox(width: 6),
+                          const Text(
+                            '(editado)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textLight,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    Text(
+                      _formatDate(c.date),
+                      style: const TextStyle(
+                        color: AppColors.textLight,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isOwner) ...[
+                IconButton(
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    size: 17,
+                    color: AppColors.primaryTeal,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Editar comentario',
+                  onPressed: () => _handleEditComment(c),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: 17,
+                    color: AppColors.danger,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Eliminar comentario',
+                  onPressed: () => _handleDeleteComment(c),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              c.comment,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 13.5,
+                height: 1.35,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Botón Responder
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Icon(
+                Icons.reply_rounded,
+                size: 15,
+                color: AppColors.primaryTeal,
+              ),
+              label: const Text(
+                'Responder',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primaryTeal,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: () {
+                setState(() => _replyingTo = c);
+                _focusNode.requestFocus();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildCommentTree(
+    List<CommentModel> allComments,
+    String? parentId,
+    int depth,
+    String? currentUsername,
+  ) {
+    final children =
+        allComments.where((c) => c.parentCommentId == parentId).toList();
+    final widgets = <Widget>[];
+
+    for (final c in children) {
+      final isReply = depth > 0;
+      final indent = depth > 0 ? (depth > 2 ? 32.0 : depth * 20.0) : 0.0;
+
+      widgets.add(
+        Padding(
+          padding: EdgeInsets.only(left: indent, bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isReply) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 14, right: 6),
+                  child: Icon(
+                    Icons.subdirectory_arrow_right_rounded,
+                    size: 16,
+                    color: AppColors.sageGreen.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+              Expanded(
+                child: _buildCommentCard(c, currentUsername, isReply),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Agregar respuestas hijas de manera recursiva
+      widgets.addAll(
+        _buildCommentTree(allComments, c.id, depth + 1, currentUsername),
+      );
+    }
+
+    return widgets;
   }
 
   @override
@@ -137,10 +391,16 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     final comments = post?.comments ?? [];
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final commentTreeWidgets = _buildCommentTree(
+      comments,
+      null,
+      0,
+      currentUsername,
+    );
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.82,
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       margin: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
@@ -193,7 +453,8 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
             ),
           ),
           const Divider(height: 1, color: AppColors.borderLight),
-          // Lista de comentarios
+
+          // Lista jerárquica de comentarios
           Expanded(
             child: comments.isEmpty
                 ? Center(
@@ -229,162 +490,62 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       ),
                     ),
                   )
-                : ListView.separated(
+                : ListView(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
-                    itemCount: comments.length,
-                    separatorBuilder: (ctx, i) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final c = comments[index];
-                      final isOwner =
-                          currentUsername != null &&
-                          c.userName.toLowerCase() ==
-                              currentUsername.toLowerCase();
-
-                      return Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isOwner
-                              ? AppColors.paleLime.withValues(alpha: 0.45)
-                              : AppColors.background,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isOwner
-                                ? AppColors.softOlive
-                                : AppColors.borderLight,
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: AppColors.sageGreen,
-                                  child: Text(
-                                    c.userName.isNotEmpty
-                                        ? c.userName[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            c.userName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              color: AppColors.textDark,
-                                            ),
-                                          ),
-                                          if (isOwner) ...[
-                                            const SizedBox(width: 6),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 1,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.primaryTeal,
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: const Text(
-                                                'Tú',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                          if (c.isEdited) ...[
-                                            const SizedBox(width: 6),
-                                            const Text(
-                                              '(editado)',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: AppColors.textLight,
-                                                fontStyle: FontStyle.italic,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                      Text(
-                                        _formatDate(c.date),
-                                        style: const TextStyle(
-                                          color: AppColors.textLight,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (isOwner) ...[
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                      color: AppColors.primaryTeal,
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    tooltip: 'Editar comentario',
-                                    onPressed: () => _handleEditComment(c),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete_outline_rounded,
-                                      size: 18,
-                                      color: AppColors.danger,
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    tooltip: 'Eliminar comentario',
-                                    onPressed: () => _handleDeleteComment(c),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 4),
-                              child: Text(
-                                c.comment,
-                                style: const TextStyle(
-                                  color: AppColors.textDark,
-                                  fontSize: 13.5,
-                                  height: 1.35,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    children: commentTreeWidgets,
                   ),
           ),
 
-          // Barra inferior de entrada para nuevo comentario
+          // Indicador visual de modo respuesta
+          if (_replyingTo != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              decoration: BoxDecoration(
+                color: AppColors.paleLime.withValues(alpha: 0.6),
+                border: const Border(
+                  top: BorderSide(color: AppColors.softOlive, width: 1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.reply_rounded,
+                    size: 16,
+                    color: AppColors.primaryTeal,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Respondiendo a @${_replyingTo!.userName}: "${_replyingTo!.comment}"',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryTeal,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => _replyingTo = null),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 16,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Barra inferior de entrada para nuevo comentario / respuesta
           Container(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
             decoration: const BoxDecoration(
@@ -402,9 +563,11 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     minLines: 1,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      hintText: currentUsername != null
-                          ? 'Comenta como @$currentUsername...'
-                          : 'Escribe un comentario...',
+                      hintText: _replyingTo != null
+                          ? 'Escribe tu respuesta a @${_replyingTo!.userName}...'
+                          : (currentUsername != null
+                              ? 'Comenta como @$currentUsername...'
+                              : 'Escribe un comentario...'),
                       hintStyle: const TextStyle(
                         fontSize: 13.5,
                         color: AppColors.textLight,
@@ -454,7 +617,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                           ),
                         )
                       : const Icon(Icons.send_rounded, size: 18),
-                  tooltip: 'Publicar comentario',
+                  tooltip: _replyingTo != null
+                      ? 'Publicar respuesta'
+                      : 'Publicar comentario',
                   onPressed: _isSubmitting ? null : _submitComment,
                 ),
               ],
@@ -533,4 +698,3 @@ class _EditCommentDialogState extends State<_EditCommentDialog> {
     );
   }
 }
-

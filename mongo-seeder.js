@@ -41,8 +41,7 @@ if (!appDb) {
       title: "Principios básicos del compostaje doméstico en departamentos",
       content: "Aprender a compostar en espacios reducidos permite transformar hasta un 50% de nuestros residuos orgánicos diarios en abono fértil para plantas urbanas, reduciendo drásticamente las emisiones de metano en vertederos.",
       createdAt: new Date("2026-10-01T10:00:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_002",
@@ -51,8 +50,7 @@ if (!appDb) {
       title: "Transición a sistemas fotovoltaicos aislados y conectados a red",
       content: "El avance de los inversores híbridos y el abaratamiento de las baterías de litio ferrofosfato (LiFePO4) hacen viable la microgeneración eléctrica distribuida en hogares y pequeños comercios.",
       createdAt: new Date("2026-10-02T11:30:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_003",
@@ -61,8 +59,7 @@ if (!appDb) {
       title: "El impacto de los microplásticos en los ecosistemas de arrecifes",
       content: "Estudios oceanográficos recientes confirman la presencia masiva de fibras sintéticas en organismos filtradores, alterando las cadenas tróficas y requiriendo un replanteamiento de la industria textil global.",
       createdAt: new Date("2026-10-03T09:15:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_004",
@@ -71,8 +68,7 @@ if (!appDb) {
       title: "Creación de corredores biológicos mediante techos y muros verdes",
       content: "La vegetación autóctona en azoteas mitiga el efecto isla de calor urbano, disminuye el gasto energético en climatización y brinda refugio vital para polinizadores como abejas y mariposas.",
       createdAt: new Date("2026-10-04T14:20:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_005",
@@ -81,8 +77,7 @@ if (!appDb) {
       title: "Electromovilidad y el futuro del transporte público urbano",
       content: "Sustituir flotas de buses diésel por buses 100% eléctricos no solo reduce toneladas de dióxido de carbono anuales, sino que también elimina la contaminación acústica en centros urbanos congestionados.",
       createdAt: new Date("2026-10-05T16:45:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_006",
@@ -91,8 +86,7 @@ if (!appDb) {
       title: "Técnicas ancestrales y modernas de captación de agua de lluvia",
       content: "El almacenamiento pasivo de aguas pluviales para uso en riego y sanitarios disminuye la presión sobre acuíferos sobreexplotados y previene inundaciones repentinas en cuencas urbanizadas.",
       createdAt: new Date("2026-10-06T08:00:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_007",
@@ -101,8 +95,7 @@ if (!appDb) {
       title: "Desafío Residuo Cero: Estrategias para compras a granel",
       content: "Reemplazar empaques desechables de un solo uso por bolsas de tela reutilizables y frascos de vidrio fomenta el comercio local y disminuye los residuos no biodegradables generados semanalmente.",
       createdAt: new Date("2026-10-07T12:10:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_008",
@@ -111,8 +104,7 @@ if (!appDb) {
       title: "Aislamiento térmico natural y ventilación cruzada en edificios",
       content: "Diseñar edificaciones considerando la trayectoria solar y los vientos dominantes minimiza la necesidad de calefacción artificial y aire acondicionado, optimizando la huella ecológica de la construcción.",
       createdAt: new Date("2026-10-08T15:30:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_009",
@@ -121,8 +113,7 @@ if (!appDb) {
       title: "Los manglares como barreras naturales frente al cambio climático",
       content: "Los bosques de mangle capturan hasta cuatro veces más carbono que los bosques terrestres (carbono azul) y sirven de amortiguadores esenciales frente al oleaje de tormentas tropicales.",
       createdAt: new Date("2026-10-09T17:00:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
     },
     {
       _id: "post_seed_010",
@@ -131,8 +122,67 @@ if (!appDb) {
       title: "Restauración de suelos agrícolas sin agroquímicos sintéticos",
       content: "La rotación de cultivos, los abonos verdes y la labranza mínima reactivan los microorganismos benéficos del suelo, mejorando la retención hídrica y asegurando cosechas ricas en nutrientes.",
       createdAt: new Date("2026-10-10T18:25:00Z").toISOString(),
-      isEdited: false,
-      comments: []
+      isEdited: false
+    }
+  ];
+
+  // ============================================================================
+  // 3. DATOS DE PRUEBA: COMENTARIOS Y SUB-COMENTARIOS (COLECCIÓN 'comments')
+  // ============================================================================
+  const mockComments = [
+    {
+      _id: "comment_seed_001",
+      postId: "post_seed_001",
+      parentCommentId: null,
+      userName: "carlos_solar",
+      comment: "¿Qué tipo de compostera recomiendas para balcones pequeños en departamentos?",
+      date: new Date("2026-10-01T12:00:00Z").toISOString(),
+      isEdited: false
+    },
+    {
+      _id: "comment_seed_002",
+      postId: "post_seed_001",
+      parentCommentId: "comment_seed_001",
+      userName: "elena_verde",
+      comment: "Las vermicomposteras verticales con lombriz roja californiana son ideales: no generan olores y ocupan muy poco espacio.",
+      date: new Date("2026-10-01T13:15:00Z").toISOString(),
+      isEdited: false
+    },
+    {
+      _id: "comment_seed_003",
+      postId: "post_seed_001",
+      parentCommentId: "comment_seed_002",
+      userName: "carlos_solar",
+      comment: "¡Excelente dato! Voy a implementar una este mismo fin de semana.",
+      date: new Date("2026-10-01T14:00:00Z").toISOString(),
+      isEdited: false
+    },
+    {
+      _id: "comment_seed_004",
+      postId: "post_seed_002",
+      parentCommentId: null,
+      userName: "marina_oceano",
+      comment: "Las baterías LiFePO4 son un cambio de juego por su estabilidad térmica y larga vida útil.",
+      date: new Date("2026-10-02T13:00:00Z").toISOString(),
+      isEdited: false
+    },
+    {
+      _id: "comment_seed_005",
+      postId: "post_seed_002",
+      parentCommentId: "comment_seed_004",
+      userName: "carlos_solar",
+      comment: "Totalmente de acuerdo, superan los 4.000 ciclos de carga manteniendo el 80% de capacidad.",
+      date: new Date("2026-10-02T14:30:00Z").toISOString(),
+      isEdited: false
+    },
+    {
+      _id: "comment_seed_006",
+      postId: "post_seed_003",
+      parentCommentId: null,
+      userName: "elena_verde",
+      comment: "Un paso sencillo pero crucial es instalar filtros en nuestras lavadoras para retener microfibras sintéticas.",
+      date: new Date("2026-10-03T11:00:00Z").toISOString(),
+      isEdited: false
     }
   ];
 
@@ -175,7 +225,16 @@ if (!appDb) {
       { upsert: true }
     );
   }
-  print(`✅ 10 publicaciones de prueba (sin comentarios) procesadas en la colección 'posts'.`);
+  print(`✅ 10 publicaciones de prueba procesadas en la colección 'posts'.`);
+
+  for (const comment of mockComments) {
+    appDb.comments.updateOne(
+      { _id: comment._id },
+      { $set: comment },
+      { upsert: true }
+    );
+  }
+  print(`✅ ${mockComments.length} comentarios y sub-comentarios procesados en la colección 'comments'.`);
 
   /*
    * --------------------------------------------------------------------------
@@ -184,20 +243,25 @@ if (!appDb) {
    *
    * 1. Inserción directa en lote:
    *    appDb.posts.insertMany(mockPosts);
+   *    appDb.comments.insertMany(mockComments);
    *
    * 2. Inserción en lote tolerante a duplicados:
    *    try {
    *      appDb.posts.insertMany(mockPosts, { ordered: false });
+   *      appDb.comments.insertMany(mockComments, { ordered: false });
    *    } catch (e) {
-   *      print('Aviso: Algunas publicaciones ya existían en la base de datos.');
+   *      print('Aviso: Algunos documentos ya existían en la base de datos.');
    *    }
    *
    * 3. Limpiar previamente la colección e insertar en lote:
    *    // appDb.posts.deleteMany({});
+   *    // appDb.comments.deleteMany({});
    *    // appDb.posts.insertMany(mockPosts);
+   *    // appDb.comments.insertMany(mockComments);
    * --------------------------------------------------------------------------
    */
 
   print('Sembrado de datos de prueba finalizado con éxito.');
 }
+
 

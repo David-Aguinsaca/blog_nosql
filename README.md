@@ -128,27 +128,43 @@ Almacena las cuentas de usuario registradas:
 }
 ```
 
-### 2. Colección `posts` (Patrón de Documento Embebido)
-Aprovecha el modelo NoSQL para incrustar los comentarios directamente en un arreglo dentro del documento del post, optimizando las consultas de lectura sin necesidad de joins relacionales:
+### 2. Colección `posts` (Colección Referenciada)
+Almacena las publicaciones del blog. Los comentarios ya no se embeben aquí, sino que se gestionan de forma desacoplada y escalable en la colección `comments`:
 ```json
 {
-  "_id": "seed_post_1",
+  "_id": "post_seed_001",
   "creatorUsername": "david",
   "topic": "Energía Renovable",
   "title": "Impacto de la energía solar comunitaria en zonas rurales",
   "content": "La instalación de microrredes solares comunitarias...",
   "createdAt": "2026-10-13T13:45:00.000Z",
-  "isEdited": false,
-  "comments": [
-    {
-      "id": "seed_comm_1",
-      "postId": "seed_post_1",
-      "userName": "elena_bio",
-      "date": "2026-10-13T14:45:00.000Z",
-      "comment": "Excelente iniciativa.",
-      "isEdited": false
-    }
-  ]
+  "isEdited": false
+}
+```
+
+### 3. Colección `comments` (Relación con Posts y Sub-comentarios)
+Almacena los comentarios y respuestas. Cada documento se relaciona con una publicación mediante `postId` y puede ser una respuesta a otro comentario mediante el campo autorreferencial `parentCommentId` (`null` si es un comentario principal/raíz):
+```json
+{
+  "_id": "comment_1728830500000",
+  "postId": "post_seed_001",
+  "parentCommentId": null,
+  "userName": "elena_bio",
+  "date": "2026-10-13T14:45:00.000Z",
+  "comment": "Excelente iniciativa.",
+  "isEdited": false
+}
+```
+Y una respuesta a ese comentario:
+```json
+{
+  "_id": "comment_1728830600000",
+  "postId": "post_seed_001",
+  "parentCommentId": "comment_1728830500000",
+  "userName": "carlos_solar",
+  "date": "2026-10-13T15:10:00.000Z",
+  "comment": "Totalmente de acuerdo, además ahorra costos en la red eléctrica.",
+  "isEdited": false
 }
 ```
 
@@ -170,12 +186,13 @@ Aprovecha el modelo NoSQL para incrustar los comentarios directamente en un arre
 - **Mis Publicaciones**: Vista exclusiva para administrar los posts del usuario activo.
 - **Indicador de Conexión en la App**: Chip visual en la pantalla principal (🟢 *MongoDB: Conectado* / 🟡 *MongoDB: Offline* con reintento táctil).
 
-### 💬 Sistema de Comentarios Embebidos
-- **Bottom Sheet interactivo**: Panel deslizante para interactuar con los comentarios.
-- **Operaciones Atómicas NoSQL**:
-  - Adición usando operador `$push`.
-  - Actualización usando operador `$set` con selector posicional.
-  - Eliminación usando operador `$pull`.
+### 💬 Sistema de Comentarios y Sub-comentarios
+- **Colección Relacionada e Independiente**: Los comentarios residen en `comments`, mejorando la escalabilidad del documento principal.
+- **Sub-comentarios / Respuestas Anidadas**: Permite responder directamente a comentarios existentes mediante autorreferencia (`parentCommentId`).
+- **Eliminación en Cascada**:
+  - Al borrar un post se eliminan todos sus comentarios en `comments`.
+  - Al borrar un comentario se eliminan en cascada sus respuestas anidadas.
+- **Bottom Sheet interactivo**: Panel deslizante con visualización jerárquica indentada para respuestas y botón "Responder".
 
 ---
 

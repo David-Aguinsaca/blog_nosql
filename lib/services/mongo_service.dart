@@ -27,6 +27,7 @@ class MongoService {
   Db? _db;
   DbCollection? _usersCollection;
   DbCollection? _postsCollection;
+  DbCollection? _commentsCollection;
 
   bool _isConnected = false;
   String? _lastError;
@@ -101,6 +102,7 @@ class MongoService {
 
       _usersCollection = _db!.collection('users');
       _postsCollection = _db!.collection('posts');
+      _commentsCollection = _db!.collection('comments');
 
       _isConnected = true;
       _lastError = null;
@@ -189,6 +191,36 @@ class MongoService {
 
   // ================= POSTS =================
 
+  /// Helper privado para consultar comentarios desde la colección 'comments'
+  /// agrupados por postId en un `Map<String, List<CommentModel>>`.
+  Future<Map<String, List<CommentModel>>> _fetchCommentsGroupedByPost({
+    List<String>? postIds,
+  }) async {
+    if (!isConnected || _commentsCollection == null) return {};
+    try {
+      final Map<String, dynamic> filter =
+          (postIds != null && postIds.isNotEmpty)
+              ? {
+                  'postId': {r'$in': postIds},
+                }
+              : {};
+
+      final commentDocs = await _commentsCollection!
+          .modernFind(filter: filter, sort: {'date': 1})
+          .toList();
+
+      final map = <String, List<CommentModel>>{};
+      for (final doc in commentDocs) {
+        final comment = CommentModel.fromMap(Map<String, dynamic>.from(doc));
+        map.putIfAbsent(comment.postId, () => []).add(comment);
+      }
+      return map;
+    } catch (e) {
+      debugPrint('Error en _fetchCommentsGroupedByPost: $e');
+      return {};
+    }
+  }
+
   Future<List<BlogPostModel>> fetchPosts() async {
     if (!isConnected || _postsCollection == null) return [];
     try {
@@ -196,9 +228,13 @@ class MongoService {
       final docs = await _postsCollection!
           .modernFind(filter: {}, sort: {'createdAt': -1})
           .toList();
-      return docs
-          .map((d) => BlogPostModel.fromMap(Map<String, dynamic>.from(d)))
-          .toList();
+
+      final commentsByPost = await _fetchCommentsGroupedByPost();
+
+      return docs.map((d) {
+        final post = BlogPostModel.fromMap(Map<String, dynamic>.from(d));
+        return post.copyWith(comments: commentsByPost[post.id] ?? []);
+      }).toList();
     } catch (e) {
       debugPrint('Error en fetchPosts: $e');
       return [];
@@ -221,9 +257,15 @@ class MongoService {
           .modernFind(filter: filter, sort: {'createdAt': -1})
           .toList();
 
-      return docs
-          .map((d) => BlogPostModel.fromMap(Map<String, dynamic>.from(d)))
-          .toList();
+      final postIds =
+          docs.map((d) => (d['_id'] ?? d['id']).toString()).toList();
+      final commentsByPost =
+          await _fetchCommentsGroupedByPost(postIds: postIds);
+
+      return docs.map((d) {
+        final post = BlogPostModel.fromMap(Map<String, dynamic>.from(d));
+        return post.copyWith(comments: commentsByPost[post.id] ?? []);
+      }).toList();
     } catch (e) {
       debugPrint('Error en searchPostsByTitle: $e');
       return [];
@@ -272,8 +314,15 @@ class MongoService {
   Future<bool> deletePost(String postId) async {
     if (!isConnected || _postsCollection == null) return false;
     try {
-      // Sentencia directa MongoDB: db.posts.deleteOne({ _id: postId })
+      // 1. Sentencia directa MongoDB: db.posts.deleteOne({ _id: postId })
       final res = await _postsCollection!.deleteOne({'_id': postId});
+
+      // 2. Eliminación en cascada en la colección 'comments'
+      // Sentencia directa MongoDB: db.comments.deleteMany({ postId: postId })
+      if (_commentsCollection != null) {
+        await _commentsCollection!.deleteMany({'postId': postId});
+      }
+
       return res.isSuccess;
     } catch (e) {
       debugPrint('Error en deletePost: $e');
@@ -281,18 +330,30 @@ class MongoService {
     }
   }
 
-  // ================= COMMENTS (NoSQL Embedded) =================
+  // ================= COMMENTS (Referenced Collection) =================
 
-  Future<bool> addComment(String postId, CommentModel comment) async {
-    if (!isConnected || _postsCollection == null) return false;
+  /// Consulta directa a MongoDB: db.comments.find({ postId: postId }).sort({ date: 1 })
+  Future<List<CommentModel>> fetchCommentsByPost(String postId) async {
+    if (!isConnected || _commentsCollection == null) return [];
     try {
-      // Sentencia directa MongoDB: db.posts.updateOne({ _id: postId }, { $push: { comments: comment } })
-      final res = await _postsCollection!.updateOne(
-        {'_id': postId},
-        {
-          r'$push': {'comments': comment.toMap()},
-        },
-      );
+      final docs = await _commentsCollection!
+          .modernFind(filter: {'postId': postId}, sort: {'date': 1})
+          .toList();
+      return docs
+          .map((d) => CommentModel.fromMap(Map<String, dynamic>.from(d)))
+          .toList();
+    } catch (e) {
+      debugPrint('Error en fetchCommentsByPost: $e');
+      return [];
+    }
+  }
+
+  /// Inserta un nuevo comentario o sub-comentario en la colección 'comments'
+  /// Sentencia directa MongoDB: db.comments.insertOne({ ... })
+  Future<bool> addComment(CommentModel comment) async {
+    if (!isConnected || _commentsCollection == null) return false;
+    try {
+      final res = await _commentsCollection!.insertOne(comment.toMap());
       return res.isSuccess;
     } catch (e) {
       debugPrint('Error en addComment: $e');
@@ -300,14 +361,18 @@ class MongoService {
     }
   }
 
-  Future<bool> updateComment(String postId, CommentModel comment) async {
-    if (!isConnected || _postsCollection == null) return false;
+  /// Actualiza el texto de un comentario existente en la colección 'comments'
+  /// Sentencia directa MongoDB: db.comments.updateOne({ _id: commentId }, { $set: { comment: ..., isEdited: true } })
+  Future<bool> updateComment(CommentModel comment) async {
+    if (!isConnected || _commentsCollection == null) return false;
     try {
-      // Sentencia directa MongoDB: db.posts.updateOne({ _id: postId, "comments.id": comment.id }, { $set: { "comments.$": comment } })
-      final res = await _postsCollection!.updateOne(
-        {'_id': postId, 'comments.id': comment.id},
+      final res = await _commentsCollection!.updateOne(
+        {'_id': comment.id},
         {
-          r'$set': {r'comments.$': comment.toMap()},
+          r'$set': {
+            'comment': comment.comment,
+            'isEdited': true,
+          },
         },
       );
       return res.isSuccess;
@@ -317,22 +382,23 @@ class MongoService {
     }
   }
 
-  Future<bool> deleteComment(String postId, String commentId) async {
-    if (!isConnected || _postsCollection == null) return false;
+  /// Elimina en cascada una lista de comentarios por sus IDs
+  /// Sentencia directa MongoDB: db.comments.deleteMany({ _id: { $in: [...] } })
+  Future<bool> deleteCommentsByIds(List<String> commentIds) async {
+    if (!isConnected || _commentsCollection == null || commentIds.isEmpty) {
+      return false;
+    }
     try {
-      // Sentencia directa MongoDB: db.posts.updateOne({ _id: postId }, { $pull: { comments: { id: commentId } } })
-      final res = await _postsCollection!.updateOne(
-        {'_id': postId},
-        {
-          r'$pull': {
-            'comments': {'id': commentId},
-          },
+      final res = await _commentsCollection!.deleteMany({
+        '_id': {
+          r'$in': commentIds,
         },
-      );
+      });
       return res.isSuccess;
     } catch (e) {
-      debugPrint('Error en deleteComment: $e');
+      debugPrint('Error en deleteCommentsByIds: $e');
       return false;
     }
   }
 }
+

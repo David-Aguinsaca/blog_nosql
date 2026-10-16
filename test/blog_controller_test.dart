@@ -161,5 +161,105 @@ void main() {
       final postAfterDelete = blogController.getPostById(post.id)!;
       expect(postAfterDelete.comments.isEmpty, true);
     });
+
+    test('Add replies (sub-comments) and verify hierarchical helpers', () async {
+      final post = await blogController.addPost(
+        creatorUsername: 'carlos',
+        topic: 'Energía',
+        title: 'Post con sub-comentarios',
+        content: 'Debate sobre paneles solares.',
+      );
+
+      // 1. Agregar comentario raíz
+      final rootSuccess = await blogController.addComment(
+        postId: post.id,
+        userName: 'elena',
+        commentText: '¿Cuál es el retorno de inversión promedio?',
+      );
+      expect(rootSuccess, true);
+
+      final rootComment = blogController.getRootComments(post.id).first;
+      expect(rootComment.parentCommentId, isNull);
+
+      // 2. Agregar sub-comentario (respuesta)
+      final replySuccess = await blogController.addComment(
+        postId: post.id,
+        userName: 'carlos',
+        commentText: 'Suele ser entre 4 y 6 años con subsidios.',
+        parentCommentId: rootComment.id,
+      );
+      expect(replySuccess, true);
+
+      final replies = blogController.getRepliesForComment(post.id, rootComment.id);
+      expect(replies.length, 1);
+      expect(replies.first.parentCommentId, rootComment.id);
+      expect(replies.first.comment, 'Suele ser entre 4 y 6 años con subsidios.');
+
+      // 3. Agregar respuesta de segundo nivel
+      final subReplySuccess = await blogController.addComment(
+        postId: post.id,
+        userName: 'marina',
+        commentText: '¡Excelente, gracias por el dato!',
+        parentCommentId: replies.first.id,
+      );
+      expect(subReplySuccess, true);
+
+      final allPostComments = blogController.getPostById(post.id)!.comments;
+      expect(allPostComments.length, 3);
+      expect(blogController.getRootComments(post.id).length, 1);
+    });
+
+    test('Cascading deletion: deleting parent comment removes all nested replies', () async {
+      final post = await blogController.addPost(
+        creatorUsername: 'marina',
+        topic: 'Océanos',
+        title: 'Arrecifes de coral',
+        content: 'Protección de biodiversidad.',
+      );
+
+      // Comentario raíz 1 con 2 respuestas (una de 1er nivel y otra de 2do nivel)
+      await blogController.addComment(
+        postId: post.id,
+        userName: 'usuario1',
+        commentText: 'Comentario raíz 1',
+      );
+      final root1 = blogController.getRootComments(post.id).first;
+
+      await blogController.addComment(
+        postId: post.id,
+        userName: 'usuario2',
+        commentText: 'Respuesta nivel 1',
+        parentCommentId: root1.id,
+      );
+      final reply1 = blogController.getRepliesForComment(post.id, root1.id).first;
+
+      await blogController.addComment(
+        postId: post.id,
+        userName: 'usuario3',
+        commentText: 'Respuesta nivel 2',
+        parentCommentId: reply1.id,
+      );
+
+      // Comentario raíz 2 independiente
+      await blogController.addComment(
+        postId: post.id,
+        userName: 'usuario4',
+        commentText: 'Comentario raíz 2 independiente',
+      );
+
+      expect(blogController.getPostById(post.id)!.comments.length, 4);
+
+      // Eliminar comentario raíz 1: debe eliminar raíz 1, respuesta nivel 1 y respuesta nivel 2
+      final deleted = await blogController.deleteComment(
+        postId: post.id,
+        commentId: root1.id,
+      );
+      expect(deleted, true);
+
+      final remaining = blogController.getPostById(post.id)!.comments;
+      expect(remaining.length, 1);
+      expect(remaining.first.comment, 'Comentario raíz 2 independiente');
+    });
   });
 }
+
