@@ -35,7 +35,7 @@ db.posts.insertOne({
   content: "La adopción de tecnología solar en techos urbanos reduce la dependencia de la red eléctrica convencional y amortiza su costo en pocos años.",
   createdAt: new Date(),
   isEdited: false,
-  comments: [] // Inicialmente sin comentarios
+  comments: []
 });
 
 
@@ -182,6 +182,7 @@ db.posts.estimatedDocumentCount();
  * 5.4 distinct(): Obtener la lista de valores únicos para un campo.
  * Extrae todos los tópicos/temáticas sin duplicados existentes en las publicaciones.
  */
+
 db.posts.distinct("topic");
 
 /**

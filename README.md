@@ -112,40 +112,127 @@ exit
 
 ---
 
-## 📊 Modelo de Datos NoSQL (Document Store)
+## 📊 Esquema y Modelo de Datos NoSQL (MongoDB)
 
-MongoDB organiza la información en documentos BSON dentro de colecciones:
+El diseño de la base de datos sigue el modelo orientado a documentos (**Document Store**) de MongoDB, implementando el patrón de **documentos embebidos** (*Embedded Pattern*) para almacenar los comentarios directamente dentro de cada publicación, minimizando la latencia y eliminando la necesidad de *joins* relacionales.
 
-### 1. Colección `users`
-Almacena las cuentas de usuario registradas:
+### 🗂️  del Esquema
+
+```mermaid
+erDiagram
+    users {
+        ObjectId_or_String _id PK "Identificador único"
+        string username UK "Nombre de usuario (único)"
+        string email UK "Correo electrónico (único)"
+        string password "Contraseña en texto o hash"
+    }
+
+    posts {
+        ObjectId_or_String _id PK "Identificador único de publicación"
+        string creatorUsername FK "Nombre de usuario del autor"
+        string topic "Tema o categoría ambiental"
+        string title "Título de la publicación"
+        string content "Cuerpo o contenido del post"
+        date createdAt "Fecha y hora de creación (ISO-8601)"
+        bool isEdited "Bandera de edición"
+        array comments "Lista de comentarios embebidos"
+    }
+
+    comments_embedded {
+        string id PK "Identificador único del comentario"
+        string postId FK "ID de la publicación padre"
+        string userName "Nombre del autor del comentario"
+        date date "Fecha y hora del comentario"
+        string comment "Texto del comentario"
+        bool isEdited "Bandera de edición"
+    }
+
+    users ||--o{ posts : "crea"
+    posts ||--|{ comments_embedded : "contiene embebido"
+```
+
+---
+
+### 1. Colección: `users`
+
+Almacena las credenciales y perfiles de los usuarios de la plataforma.
+
+#### Estructura de Campos:
+
+| Campo | Tipo BSON | Requerido | Descripción / Restricciones |
+| :--- | :--- | :---: | :--- |
+| `_id` | `String` / `ObjectId` | Sí | Clave primaria única del usuario. |
+| `username` | `String` | Sí | Nombre de usuario. Índice único (`unique: true`). |
+| `email` | `String` | Sí | Correo electrónico. Índice único (`unique: true`). |
+| `password` | `String` | Sí | Contraseña para autenticación. |
+
+#### Índices de la colección:
+- `{ username: 1 }` (Unique)
+- `{ email: 1 }` (Unique)
+
+#### Documento de Ejemplo:
 ```json
 {
-  "_id": "user_1",
+  "_id": "user_670d3810a9f3b1234567890a",
   "username": "david",
   "email": "david@planetaverde.org",
-  "password": "123456",
+  "password": "miPasswordSeguro123",
   "createdAt": "2026-10-13T10:00:00.000Z"
 }
 ```
 
-### 2. Colección `posts` (Patrón de Documento Embebido)
-Aprovecha el modelo NoSQL para incrustar los comentarios directamente en un arreglo dentro del documento del post, optimizando las consultas de lectura sin necesidad de joins relacionales:
+---
+
+### 2. Colección: `posts`
+
+Almacena los artículos y publicaciones. Los comentarios se guardan como subdocumentos embebidos en el arreglo `comments`.
+
+#### Estructura de Campos:
+
+| Campo | Tipo BSON | Requerido | Descripción / Restricciones |
+| :--- | :--- | :---: | :--- |
+| `_id` | `String` / `ObjectId` | Sí | Identificador único del post. |
+| `creatorUsername` | `String` | Sí | Nombre de usuario del creador (autor). Indexado. |
+| `topic` | `String` | Sí | Categoría ecológica (*Energía Renovable*, *Reforestación*, etc.). Indexado. |
+| `title` | `String` | Sí | Título descriptivo de la publicación. |
+| `content` | `String` | Sí | Contenido completo del post. |
+| `createdAt` | `Date` / `String (ISO)` | Sí | Fecha de publicación. Índice descendente para ordenar cronológicamente. |
+| `isEdited` | `Boolean` | Sí | Indica si la publicación fue editada (`true`/`false`). |
+| `comments` | `Array<Subdocument>` | No | Lista de comentarios embebidos asociados al post. |
+
+#### Subdocumento Embebido: `comments`
+
+| Campo | Tipo | Requerido | Descripción |
+| :--- | :--- | :---: | :--- |
+| `id` | `String` | Sí | Identificador único del comentario (ej. generado con timestamp/UUID). |
+| `postId` | `String` | Sí | Referencia al post contenedor. |
+| `userName` | `String` | Sí | Nombre de usuario del autor del comentario. |
+| `date` | `Date` / `String (ISO)` | Sí | Fecha y hora en que se envió el comentario. |
+| `comment` | `String` | Sí | Texto o contenido del comentario. |
+| `isEdited` | `Boolean` | Sí | Indica si el comentario fue modificado. |
+
+#### Índices de la colección:
+- `{ createdAt: -1 }`: Ordenamiento cronológico eficiente del feed.
+- `{ creatorUsername: 1 }`: Filtrado rápido por autor ("Mis Publicaciones").
+- `{ topic: 1 }`: Filtrado por categorías temáticas.
+
+#### Documento de Ejemplo:
 ```json
 {
-  "_id": "seed_post_1",
+  "_id": "post_670d3890a9f3b1234567890b",
   "creatorUsername": "david",
   "topic": "Energía Renovable",
   "title": "Impacto de la energía solar comunitaria en zonas rurales",
-  "content": "La instalación de microrredes solares comunitarias...",
+  "content": "La instalación de microrredes solares comunitarias promueve la independencia energética...",
   "createdAt": "2026-10-13T13:45:00.000Z",
   "isEdited": false,
   "comments": [
     {
-      "id": "seed_comm_1",
-      "postId": "seed_post_1",
+      "id": "comm_1728827100000",
+      "postId": "post_670d3890a9f3b1234567890b",
       "userName": "elena_bio",
       "date": "2026-10-13T14:45:00.000Z",
-      "comment": "Excelente iniciativa.",
+      "comment": "Excelente iniciativa. ¿Tienen mediciones del ahorro estimado?",
       "isEdited": false
     }
   ]
