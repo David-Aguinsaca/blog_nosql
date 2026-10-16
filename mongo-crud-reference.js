@@ -19,7 +19,7 @@ db.posts.insertOne({
  * Equivale a una búsqueda tipo "LIKE '%solar%'" en SQL.
  */
 db.posts.find({
-  title: { $regex: "solar", $options: "i" }
+  title: { $regex: "Principios", $options: "i" }
 }).pretty();
 
 
@@ -91,7 +91,7 @@ db.comments.updateOne(
  * Consultar comentarios y sub-comentarios de una publicación específica ordenados por fecha:
  */
 db.comments.find({
-  postId: "post_1728830000000"
+  postId: "post_seed_001"
 }).sort({ date: 1 }).pretty();
 
 /**
