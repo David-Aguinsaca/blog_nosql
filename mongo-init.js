@@ -19,12 +19,10 @@
 //   ]
 // });
 
-// 2. Crear Colecciones
 appDb.createCollection('users');
 appDb.createCollection('posts');
 appDb.createCollection('comments');
 
-// 3. Crear Índices
 appDb.users.createIndex({ username: 1 }, { unique: true });
 appDb.users.createIndex({ email: 1 }, { unique: true });
 appDb.posts.createIndex({ createdAt: -1 });
